@@ -1,1 +1,1 @@
-# rdkb-specifications
+# CoreRDK-Broadband-Specification

@@ -1,0 +1,1102 @@
+"""Shared page shell for the CoreRDK-Broadband-Specification site: a fixed
+left sidebar nav + content area, used by every page (both the ones generated
+from spec-content.json and the static stub pages).
+
+Not imported by the stub pages at runtime — this only runs at generation
+time, in Python, to produce plain static HTML. Nothing here ships to the
+browser as Python.
+"""
+from __future__ import annotations
+
+import html
+import json
+
+COMPONENTS_URL = "components/"
+
+# Nav structure: each top-level entry is either
+#   ("link", id, label, href, external)      -- a plain nav link
+#   ("group", id, label, [child_link, ...])   -- a dropdown; children are
+#                                                 ("link", id, label, href, external) tuples
+# external items get an "external link" arrow and open the components site
+# rather than a local page in this repo.
+NAV_LINKS = [
+    ("link", "about", "About Core RDK Broadband", "index.html", False),
+    ("group", "standards", "Standards", [
+        ("link", "architecture-standards", "Architecture Standards", "architecture-standards.html", False),
+        ("link", "industry-standards", "Industry Conformance Standards", "industry-standards.html", False),
+        ("link", "technical-governance", "Development Standards", "technical-governance.html", False),
+    ]),
+    ("link", "component-registry", "Component Registry", "component-registry.html", False),
+    ("group", "nbi-group", "North Bound APIs", [
+        ("link", "nbi-spec", "North Bound Specification", "north-bound-specification.html", False),
+        ("link", "nbi", "List of North Bound APIs", "north-bound-apis.html", False),
+    ]),
+    ("group", "sbi-group", "South Bound APIs", [
+        ("link", "sbi-spec", "South Bound Specification", "south-bound-specification.html", False),
+        ("link", "sbi", "List of South Bound APIs", "south-bound-apis.html", False),
+    ]),
+    ("link", "hwcompat", "Hardware Compatibility", "hardware-compatibility.html", False),
+    ("link", "components", "Core RDK Components", COMPONENTS_URL, True),
+]
+
+SHARED_CSS = """
+  :root {
+    --bedrock: #080d18; --hal: #16305a; --middleware: #2a5cf0; --mgmt: #0aa66e;
+    --cloud-bg: #eef1ff; --cloud-fg: #3730a3; --ink: #0b1220; --muted: #5b6472;
+    --page-bg: #f6f7fb; --card-bg: #ffffff; --border: #e5e8f0;
+    --amber-fg: #b45309; --amber-bg: #fef3c7;
+    --sidebar-w: 268px;
+    --rdk-blue: #29b6e8; --rdk-amber: #f5a623; --rdk-green: #7ac943; --rdk-orange: #f0653e;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06), 0 1px 1px rgba(15,23,42,0.04);
+    --shadow-md: 0 8px 24px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--ink); background: var(--page-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  a { color: var(--middleware); }
+  h1, h2, h3, h4 { font-family: "Space Grotesk", "Inter", sans-serif; font-weight: 700; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
+  p { margin: 0 0 12px; color: var(--muted); }
+
+  /* ---- top accent bar, echoes the RDK mark's four bars ---- */
+  .accent-bar {
+    height: 5px; width: 100%;
+    background: linear-gradient(90deg, var(--rdk-blue) 0%, var(--rdk-blue) 25%, var(--rdk-green) 25%, var(--rdk-green) 50%, var(--rdk-amber) 50%, var(--rdk-amber) 75%, var(--rdk-orange) 75%, var(--rdk-orange) 100%);
+    position: fixed; top: 0; left: 0; z-index: 60;
+  }
+
+  /* ---- top nav (mega-nav style) ---- */
+  .topnav {
+    position: fixed; top: 5px; left: 0; right: 0; z-index: 50;
+    background: rgba(8,13,24,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px; gap: 20px;
+  }
+  .topnav .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .topnav .brand img { height: 26px; width: auto; display: block; }
+  .topnav .brand-text { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.86rem; color: #fff; white-space: nowrap; }
+  .topnav nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 8px; flex: 1 1 auto; min-width: 0; }
+
+  /* Every nav control — plain links, dropdown toggles, all of it — shares
+     this one pill style so the whole bar reads as one consistent design
+     echoing the "Core RDK Components" CTA's blue, instead of a mix of plain
+     text and boxes. */
+  .topnav > nav > a, .nav-group-toggle {
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+    background: linear-gradient(90deg, var(--rdk-blue), #7c3aed); border: none;
+    font-family: inherit; color: #fff; text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    line-height: 1.6; box-sizing: border-box; appearance: none; -webkit-appearance: none;
+    padding: 7px 13px; border-radius: 999px; white-space: nowrap; transition: all 0.12s; outline: none;
+  }
+  .topnav > nav > a:hover, .nav-group-toggle:hover { filter: brightness(1.12); }
+  .topnav > nav > a.active, .nav-group.open .nav-group-toggle, .nav-group-toggle.active {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.6) inset; font-weight: 700;
+  }
+  .topnav > nav > a .ext-arrow { font-size: 0.78em; color: #e6ebff; }
+  .topnav > nav > a:focus-visible, .nav-group-toggle:focus-visible {
+    outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.55); color: #fff;
+  }
+  .topnav .cta {
+    flex: 0 0 auto; background: linear-gradient(90deg, var(--rdk-blue), #7c3aed); color: #fff;
+    font-size: 0.76rem; font-weight: 600; padding: 7px 14px; border-radius: 999px;
+    text-decoration: none; white-space: nowrap; border: none;
+  }
+
+  /* ---- nav dropdown groups (Standards, North Bound APIs) ---- */
+  .nav-group { position: relative; flex: 0 0 auto; }
+  .nav-group-toggle .caret { font-size: 0.65em; transition: transform 0.15s; }
+  .nav-group.open .nav-group-toggle .caret { transform: rotate(180deg); }
+  .nav-dropdown {
+    display: none; position: absolute; top: 100%; left: 0; padding-top: 8px; z-index: 55;
+  }
+  .nav-group:hover .nav-dropdown, .nav-group.open .nav-dropdown, .nav-group:focus-within .nav-dropdown { display: block; }
+  .nav-dropdown-inner {
+    min-width: 230px; background: #10182b; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    box-shadow: var(--shadow-md); padding: 6px;
+  }
+  .nav-dropdown a, .nav-dropdown a:visited {
+    display: block; color: #fff; text-decoration: none; font-size: 0.84rem; font-weight: 500;
+    padding: 9px 12px; border-radius: 7px; white-space: nowrap; border-bottom: none;
+  }
+  .nav-dropdown a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-dropdown a.active, .nav-dropdown a.active:visited {
+    color: #fff; font-weight: 700; background: rgba(41,182,232,0.28);
+  }
+  .nav-dropdown a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.45) inset; }
+
+  /* ---- main content area ---- */
+  .page-main { min-height: 100vh; margin-top: 61px; }
+
+  @media (max-width: 900px) {
+    .topnav { flex-wrap: wrap; padding: 10px 16px; }
+    .topnav nav { order: 3; width: 100%; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
+    .page-main { margin-top: 108px; }
+    .nav-dropdown { position: static; padding-top: 0; }
+    .nav-dropdown-inner { box-shadow: none; border: none; background: rgba(255,255,255,0.03); margin: 2px 0 6px 12px; }
+  }
+
+  /* ---- hero ---- */
+  .hero {
+    background:
+      radial-gradient(ellipse 480px 320px at 12% 10%, rgba(41,182,232,0.35), transparent 60%),
+      radial-gradient(ellipse 420px 320px at 92% 85%, rgba(122,201,67,0.18), transparent 60%),
+      linear-gradient(120deg, #0a1a3d 0%, #17246a 40%, #2b1a5e 75%, #3a1a4c 100%);
+    color: #fff; padding: 68px 44px 52px; position: relative; overflow: hidden;
+  }
+  .hero-flex { display: flex; align-items: center; gap: 44px; max-width: 1520px; }
+  .hero-inner { max-width: 640px; flex: 1 1 auto; min-width: 0; }
+  .hero-visual { flex: 0 0 540px; max-width: 540px; display: flex; justify-content: flex-end; align-items: center; margin-left: auto; overflow: hidden; }
+  .hero-visual img { width: 100%; max-width: 540px; height: auto; object-fit: contain; mix-blend-mode: lighten; opacity: .92; -webkit-mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 100%); }
+  @media (max-width: 1300px) { .hero-visual { flex-basis: 420px; max-width: 420px; } .hero-visual img { max-width: 420px; } }
+  @media (max-width: 1000px) { .hero-visual { display: none; } }
+
+  .eyebrow { display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: #7ec4f2; border: 1px solid rgba(126,196,242,0.35); background: rgba(126,196,242,0.06); border-radius: 999px; padding: 5px 13px; margin-bottom: 20px; }
+  .hero h1 { font-size: 2.5rem; line-height: 1.12; color: #fff; max-width: 760px; }
+  .hero .lede { color: #a9b8d6; font-size: 1.08rem; max-width: 640px; margin-top: 16px; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .badge { display: inline-block; margin: 0 10px 10px 0; font-size: 0.8rem; font-weight: 600; padding: 7px 14px; border-radius: 999px; background: rgba(255,255,255,0.07); color: #dbe4f3; border: 1px solid rgba(255,255,255,0.12); }
+  .stats {
+    max-width: 1520px; margin: -32px 44px 0; padding: 0; display: flex; gap: 0;
+    background: #fff;
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    position: relative; z-index: 2; box-shadow: var(--shadow-md);
+  }
+  .stat { flex: 1; min-width: 0; background: transparent; padding: 20px 20px; text-align: left; display: flex; align-items: center; gap: 12px; border-top: 3px solid transparent; border-right: 1px solid var(--border); }
+  .stat:last-child { border-right: none; }
+  .stat:nth-child(1) { border-top-color: var(--rdk-blue); }
+  .stat:nth-child(2) { border-top-color: var(--rdk-green); }
+  .stat:nth-child(3) { border-top-color: var(--rdk-amber); }
+  .stat:nth-child(4) { border-top-color: var(--rdk-orange); }
+  .stat:nth-child(5) { border-top-color: var(--middleware); }
+  .stat-icon { flex: 0 0 auto; display: flex; }
+  .stat:nth-child(1) .stat-icon { color: var(--rdk-blue); }
+  .stat:nth-child(2) .stat-icon { color: var(--rdk-green); }
+  .stat:nth-child(3) .stat-icon { color: var(--rdk-amber); }
+  .stat:nth-child(4) .stat-icon { color: var(--rdk-orange); }
+  .stat:nth-child(5) .stat-icon { color: var(--middleware); }
+  .stat .num { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .stat .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-weight: 500; }
+  @media (max-width: 760px) { .stats { flex-wrap: wrap; margin: -20px 16px 0; } .stat { flex: 1 1 40%; border-right: none; border-bottom: 1px solid var(--border); } .hero { padding: 48px 20px 40px; } }
+
+  /* ---- sections ---- */
+  section { max-width: 1520px; margin: 0; padding: 60px 44px; }
+  section.tight-top { padding-top: 52px; }
+  @media (max-width: 760px) { section { padding: 40px 20px; } }
+  .section-head { margin-bottom: 34px; }
+  .section-head .eyebrow-lt { font-family: "JetBrains Mono", monospace; font-size: 0.74rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--middleware); font-weight: 600; margin-bottom: 9px; display: block; }
+  .section-head h2 { font-size: 1.85rem; }
+  .section-head p { margin-top: 11px; font-size: 1.02rem; max-width: 680px; }
+  .callout { max-width: 820px; background: linear-gradient(135deg, #eef2ff 0%, #f3f0ff 100%); border: 1px solid #d3dbfb; border-left: 4px solid var(--middleware); border-radius: 10px; padding: 22px 26px; margin: 18px 0; }
+  .callout strong { color: var(--ink); display: block; margin-bottom: 5px; font-size: 0.95rem; font-family: "Space Grotesk", sans-serif; }
+  .callout p { margin: 0; font-size: 0.95rem; }
+  .two-col { display: flex; gap: 28px; }
+  .two-col > * { flex: 1; min-width: 0; }
+  @media (max-width: 760px) { .two-col { flex-direction: column; } }
+  .card { max-width: 820px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--middleware); border-radius: 12px; padding: 22px 24px; box-shadow: var(--shadow-sm); transition: box-shadow 0.15s, transform 0.15s; }
+
+  /* ---- quick-link card row (colorful teaser cards, e.g. "Why RDKB Core") ---- */
+  .quicklink-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; margin: 4px 0 8px; }
+  .quicklink-card {
+    flex: 1 1 168px; min-width: 168px; background: var(--card-bg); border: 1px solid var(--border);
+    border-top: 3px solid var(--ql-color, var(--middleware)); border-radius: 12px;
+    padding: 14px 16px; text-decoration: none; box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .quicklink-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .quicklink-card .ql-icon { color: var(--ql-color, var(--middleware)); margin-bottom: 8px; display: block; }
+  .quicklink-card .ql-title { font-size: 0.86rem; font-weight: 600; color: var(--ink); }
+  .quicklink-card .ql-cta { font-size: 0.78rem; font-weight: 600; color: var(--ql-color, var(--middleware)); margin-top: 8px; }
+
+  /* ---- grid variant: bigger overview cards with a description line ---- */
+  .quicklink-row.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; overflow: visible; }
+  .quicklink-row.grid .quicklink-card { min-width: 0; padding: 22px 20px; }
+  .quicklink-row.grid .ql-icon svg { width: 30px; height: 30px; }
+  .quicklink-row.grid .ql-title { font-size: 1rem; margin-bottom: 6px; }
+  .quicklink-row.grid .ql-desc { font-size: 0.86rem; color: var(--muted); line-height: 1.45; margin-bottom: 10px; }
+  @media (max-width: 1100px) { .quicklink-row.grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .quicklink-row.grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---- dark "feature band" wrapper for the overview grid, echoing the hero ---- */
+  .feature-band {
+    background: linear-gradient(150deg, #0a1a3d 0%, #0c1436 55%, #0a0f24 100%);
+    border-radius: 20px; padding: 34px; margin: 22px 0 8px;
+  }
+  .feature-band .quicklink-card {
+    background: linear-gradient(165deg, rgba(24,46,92,0.85) 0%, rgba(7,13,30,0.95) 100%);
+    border: 1px solid rgba(93,196,255,0.32); border-top: 1px solid rgba(93,196,255,0.32);
+    box-shadow: 0 0 0 1px rgba(93,196,255,0.08) inset, 0 6px 18px rgba(0,0,0,0.3);
+  }
+  .feature-band .quicklink-card:hover {
+    box-shadow: 0 0 0 1px rgba(93,196,255,0.55) inset, 0 14px 30px rgba(0,0,0,0.45);
+    transform: translateY(-3px);
+  }
+  .feature-band .quicklink-card { border-color: var(--ql-color, rgba(93,196,255,0.32)); }
+  .feature-band .ql-icon { color: var(--ql-color, #7dd3fc); filter: drop-shadow(0 0 6px var(--ql-color, rgba(56,189,248,0.55))); }
+  .feature-band .ql-title { color: #f5f8ff; }
+  .feature-band .ql-desc { color: #9fb0d0; }
+  .feature-band .ql-cta { color: var(--ql-color, #5fd0ff); }
+
+  /* ---- in-page tab bar (Overview / Why Core RDK / RDK Ready / Architecture / Testing) ---- */
+  .tabs-bar {
+    position: sticky; top: 61px; z-index: 40;
+    background: linear-gradient(120deg, #0a1a3d 0%, #17246a 40%, #2b1a5e 75%, #3a1a4c 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .tabs-inner { max-width: 1520px; margin: 0 auto; display: flex; gap: 8px; padding: 12px 44px; overflow-x: auto; scrollbar-width: none; }
+  .tabs-inner::-webkit-scrollbar { display: none; }
+  .tab-btn { flex: 0 0 auto; background: none; border: none; border-radius: 10px; padding: 12px 18px; font: 600 0.95rem/1 "Inter", sans-serif; color: rgba(255,255,255,0.72); cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+  /* each tab gets its own accent, echoing the 5-color stripe used in .stats / the overview cards */
+  .tab-btn:nth-child(1) { --tab-color: var(--rdk-blue); }
+  .tab-btn:nth-child(2) { --tab-color: var(--rdk-green); }
+  .tab-btn:nth-child(3) { --tab-color: var(--rdk-amber); }
+  .tab-btn:nth-child(4) { --tab-color: var(--rdk-orange); }
+  .tab-btn:nth-child(5) { --tab-color: var(--middleware); }
+  .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .tab-btn.active { color: #04121f; background: var(--tab-color, var(--rdk-blue)); }
+  .tab-btn.active:hover { color: #04121f; background: var(--tab-color, var(--rdk-blue)); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  @media (max-width: 760px) { .tabs-bar { top: 108px; } }
+
+  /* ---- color-tinted section panels (e.g. Why RDKB Core, RDK Ready, Benefits) ---- */
+  .section-tint { border-radius: 16px; padding: 28px 30px; margin: 28px 0; }
+  .section-tint.tint-blue { background: #e6f1fb; }
+  .section-tint.tint-blue .subhead { color: #0c447c; }
+  .section-tint.tint-green { background: #eaf3de; }
+  .section-tint.tint-green .subhead { color: #27500a; }
+  .section-tint.tint-amber { background: #faeeda; }
+  .section-tint.tint-amber .subhead { color: #854f0b; }
+  .section-tint .card { background: rgba(255,255,255,0.7); }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .card h3 { font-size: 1.02rem; margin-bottom: 9px; }
+  .card p { font-size: 0.92rem; margin: 0; }
+  table.def-table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0 28px;
+    font-size: 0.92rem; border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; box-shadow: var(--shadow-sm);
+  }
+  table.def-table th, table.def-table td { text-align: left; padding: 14px 18px; vertical-align: top; }
+  table.def-table th {
+    font-family: "Space Grotesk", sans-serif; font-size: 0.78rem; text-transform: uppercase;
+    letter-spacing: 0.06em; font-weight: 700; color: #fff;
+    background: linear-gradient(90deg, var(--hal), var(--middleware));
+    border-bottom: none;
+  }
+  table.def-table th:first-child { border-top-left-radius: 12px; }
+  table.def-table th:last-child { border-top-right-radius: 12px; }
+  table.def-table tbody tr { border-bottom: 1px solid var(--border); }
+  table.def-table tbody tr:last-child { border-bottom: none; }
+  table.def-table tbody tr:nth-child(odd) { background: #fbfcff; }
+  table.def-table tbody tr:nth-child(even) { background: #fff; }
+  table.def-table tbody tr:hover { background: var(--cloud-bg); }
+  table.def-table td { color: var(--muted); line-height: 1.65; border-right: 1px solid var(--border); }
+  table.def-table td:last-child { border-right: none; }
+  table.def-table td:first-child {
+    color: var(--ink); font-weight: 700; font-family: "Space Grotesk", sans-serif;
+    font-size: 0.94rem; border-left: 3px solid var(--rdk-blue); background: rgba(41,182,232,0.04);
+    width: 26%; min-width: 200px;
+  }
+  table.def-table td.mono { color: var(--ink); font-weight: 600; }
+
+  /* ---- governance process sections (§7.2 / §7.3 narrative content) ---- */
+  .gov-section.level-2 { padding-top: 22px; margin-top: 22px; border-top: 1px solid var(--border); }
+  .gov-section.level-2:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .gov-section h3, .gov-section h4, .gov-section h5 {
+    display: flex; align-items: baseline; gap: 10px; font-family: "Space Grotesk", sans-serif;
+  }
+  .gov-section h3 { font-size: 1.12rem; }
+  .gov-section h4 { font-size: 1.0rem; margin-top: 14px; }
+  .gov-section h5 { font-size: 0.92rem; color: var(--muted); margin-top: 10px; }
+  .gov-num {
+    font-family: "JetBrains Mono", monospace; font-size: 0.72rem; font-weight: 700;
+    color: #fff; background: var(--middleware); padding: 2px 8px; border-radius: 5px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .gov-section p { margin: 6px 0 10px; font-size: 0.92rem; }
+  .gov-section ul { margin: 6px 0 16px; padding-left: 20px; color: var(--muted); }
+  .gov-section ul li { margin-bottom: 5px; line-height: 1.6; font-size: 0.92rem; }
+  .gov-section table.def-table { margin: 10px 0 18px; font-size: 0.86rem; }
+  .gov-section pre.code-block {
+    background: #0b1220; color: #cbd5e1; padding: 16px 18px; border-radius: 10px;
+    overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 0.8rem;
+    line-height: 1.55; margin: 10px 0 18px; white-space: pre;
+  }
+  .gov-section h5.gov-subhead {
+    font-family: "Space Grotesk", sans-serif; font-size: 0.82rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--middleware);
+    margin: 18px 0 6px; display: block;
+  }
+  .timeline { border-left: 2px solid var(--border); margin-left: 6px; padding-left: 24px; display: flex; flex-direction: column; gap: 18px; }
+  .tl-item { position: relative; }
+  .tl-item::before { content: ""; position: absolute; left: -29px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--middleware); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--middleware); }
+  .tl-year { font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--middleware); font-size: 0.86rem; }
+  .tl-item p { margin: 2px 0 0; font-size: 0.92rem; }
+  .tier-diagram { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+  .tier { display: flex; align-items: stretch; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .tier:last-child { border-bottom: none; }
+  .tier .num { flex: 0 0 64px; display: flex; align-items: center; justify-content: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.15rem; }
+  .tier .body { flex: 1; padding: 19px 24px; }
+  .tier .body h4 { margin: 0 0 4px; font-size: 1.02rem; }
+  .tier .body p { margin: 0; font-size: 0.88rem; }
+  .tier .body-split { display: flex; padding: 0; }
+  .tier .body-split .split-col { flex: 1; padding: 19px 24px; }
+  .tier .body-split .split-col:first-child { border-right: 1px solid rgba(255,255,255,0.25); }
+  .tier .body-split h4 { margin: 0 0 4px; font-size: 1.02rem; }
+  .tier .body-split p { margin: 0; font-size: 0.88rem; }
+  .tier.t5 { background: #e5e7eb; color: #1f2937; }
+  .tier.t5 .num { background: #d1d5db; color: #1f2937; }
+  .tier.t4 { background: #cfe0fb; color: #10284d; }
+  .tier.t4 .num { background: #9dc0f2; color: #10284d; }
+  .tier.t3 { background: var(--middleware); color: #fff; }
+  .tier.t3 .num { background: #1a3fb5; color: #fff; }
+  .tier.t3 .body p, .tier.t3 .body-split p { color: #dce6ff; }
+  .tier.t3 .body h4, .tier.t3 .body-split h4 { color: #fff; }
+  .tier.t2 { background: var(--hal); color: #fff; }
+  .tier.t2 .num { background: #0e2144; color: #fff; }
+  .tier.t2 .body p { color: #c5d3e6; }
+  .tier.t2 .body h4 { color: #fff; }
+  .tier.t1 { background: var(--bedrock); color: #fff; }
+  .tier.t1 .num { background: #000308; color: #9fb2cf; }
+  .tier.t1 .body p { color: #9fb2cf; }
+  .tier.t1 .body h4 { color: #fff; }
+  .tier-caption { text-align: center; font-size: 0.82rem; color: var(--muted); margin-top: 12px; }
+  .layer-stack { display: flex; flex-direction: column; gap: 6px; }
+  .layer-box { margin-bottom: 6px; border-radius: 9px; padding: 13px 16px; font-size: 0.86rem; font-weight: 600; text-align: center; }
+  .layer-box:last-child { margin-bottom: 0; }
+  .layer-box.top { background: var(--middleware); color: #fff; }
+  .layer-box.mid { background: var(--hal); color: #fff; }
+  .layer-box.bot { background: #e2e8f0; color: var(--ink); }
+  .subhead { font-family: "Space Grotesk", sans-serif; font-size: 1.2rem; font-weight: 700; margin: 36px 0 14px; }
+  .subhead:first-of-type { margin-top: 8px; }
+  footer { background: var(--bedrock); color: #9fb2cf; padding: 44px 44px 30px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 28px; margin-bottom: 22px; max-width: 900px; }
+  .footer-links a { display: block; min-width: 200px; margin: 0 28px 14px 0; color: #dbe4f3; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+  .footer-links a span { display: block; font-weight: 400; color: #8493ab; font-size: 0.8rem; margin-top: 2px; }
+  .footer-meta { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px; font-size: 0.78rem; color: #7386a3; max-width: 900px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { display: inline-block; margin: 0 8px 8px 0; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: #f1f3f9; color: var(--ink); border: 1px solid var(--border); }
+
+  /* ---- empty-state (for the not-yet-populated API/HW pages) ---- */
+  .empty-state { max-width: 560px; margin: 40px auto; text-align: center; padding: 48px 32px; background: #fff; border: 1px dashed var(--border); border-radius: 16px; }
+  .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  .empty-state p { font-size: 0.92rem; }
+  .empty-state code { display: inline-block; background: #f1f3f9; padding: 2px 8px; border-radius: 5px; margin-top: 4px; }
+
+  /* ---- floating search chatbox (site-wide, every page) ---- */
+  .chatbox-toggle {
+    position: fixed; bottom: 22px; right: 22px; z-index: 90;
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--rdk-blue), #7c3aed); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(26,86,219,0.4);
+  }
+  .chatbox-toggle svg { width: 24px; height: 24px; }
+  .chatbox-panel {
+    position: fixed; bottom: 84px; right: 22px; z-index: 90;
+    width: 360px; max-width: calc(100vw - 44px); height: 480px; max-height: calc(100vh - 130px);
+    background: #fff; border-radius: 16px; box-shadow: var(--shadow-md), 0 12px 40px rgba(0,0,0,0.18);
+    display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+  }
+  .chatbox-panel.open { display: flex; }
+  .chatbox-header {
+    background: var(--bedrock); color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chatbox-header .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.9rem; }
+  .chatbox-header .subtitle { font-size: 0.72rem; color: #9fb2cf; margin-top: 2px; }
+  .chatbox-close { background: none; border: none; color: #9fb2cf; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px; }
+  .chatbox-body { flex: 1; overflow-y: auto; padding: 14px 16px; background: #f8fafc; }
+  .chatbox-welcome { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .chatbox-answer { background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--middleware); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .chatbox-answer .cb-cat { font-family: "JetBrains Mono", monospace; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--middleware); font-weight: 600; }
+  .chatbox-answer .cb-title { font-weight: 600; font-size: 0.86rem; margin: 3px 0 5px; }
+  .chatbox-answer .cb-text { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .chatbox-related { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 12px 0 6px; }
+  .chatbox-result { display: block; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; text-decoration: none; }
+  .chatbox-result .cb-r-title { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
+  .chatbox-result .cb-r-cat { font-size: 0.7rem; color: var(--muted); }
+  .chatbox-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: #fff; }
+  .chatbox-input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.82rem; font-family: inherit; }
+  .chatbox-submit { background: var(--middleware); color: #fff; border: none; border-radius: 8px; padding: 0 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+
+  /* ---- floating contact widget (site-wide, mirrors the search chatbox) ---- */
+  .contact-toggle {
+    position: fixed; bottom: 22px; left: 22px; z-index: 90;
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--mgmt), var(--rdk-blue)); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(14,159,110,0.4);
+  }
+  .contact-toggle svg { width: 22px; height: 22px; }
+  .contact-panel {
+    position: fixed; bottom: 84px; left: 22px; z-index: 90;
+    width: 340px; max-width: calc(100vw - 44px);
+    background: #fff; border-radius: 16px; box-shadow: var(--shadow-md), 0 12px 40px rgba(0,0,0,0.18);
+    display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+  }
+  .contact-panel.open { display: flex; }
+  .contact-header { background: var(--bedrock); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .contact-header .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.9rem; }
+  .contact-header .subtitle { font-size: 0.72rem; color: #9fb2cf; margin-top: 2px; }
+  .contact-close { background: none; border: none; color: #9fb2cf; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px; }
+  .contact-body { padding: 16px; }
+  .contact-field { margin-bottom: 12px; }
+  .contact-field label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .contact-field input, .contact-field textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
+    font-size: 0.84rem; font-family: inherit; resize: vertical;
+  }
+  .contact-submit {
+    width: 100%; background: var(--mgmt); color: #fff; border: none; border-radius: 8px;
+    padding: 10px; font-size: 0.86rem; font-weight: 600; cursor: pointer; margin-top: 4px;
+  }
+  .contact-submit:disabled { opacity: 0.6; cursor: default; }
+  .contact-status { font-size: 0.78rem; margin-top: 10px; text-align: center; }
+  .contact-status.ok { color: #0aa66e; }
+  .contact-status.err { color: #b91c1c; }
+  .contact-mailto { display: block; text-align: center; font-size: 0.76rem; color: var(--muted); margin-top: 10px; }
+"""
+
+
+# Small inline-SVG line icons for the quick-link card row. Hand-drawn rather
+# than a webfont — the Visualizer sandbox's Tabler Icons aren't available in
+# the actual deployed static site, and this avoids adding an external CDN
+# dependency just for a handful of glyphs.
+ICONS = {
+    "recycle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/><path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/><path d="M14.5 4.5 12 9l-2.5-4.5"/><path d="M16.5 14.5 19 19l-2.5 4.5" opacity="0"/></svg>',
+    "shield-check": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    "cloud-up": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.6-7.95A5 5 0 0 1 16.2 8.9 4.5 4.5 0 0 1 16 18H7z"/><path d="M12 17v-6"/><path d="M9.5 13.5 12 11l2.5 2.5"/></svg>',
+    "cpu": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg>',
+    "layers": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
+    "check-list": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M5 12h14M5 18h9"/><path d="M3 6l.01 0M3 12l.01 0M3 18l.01 0"/></svg>',
+    "share": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.4"/><circle cx="17" cy="5.5" r="2.4"/><circle cx="17" cy="18.5" r="2.4"/><path d="M8.1 10.8 14.9 6.7M8.1 13.2l6.8 4.1"/></svg>',
+    "monitor": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>',
+    "cubes": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l4 2.3v4.6L12 12l-4-2.1V5.3z"/><path d="M5 12.9l4 2.1v4.6l-4 2.3-4-2.3v-4.6z" transform="translate(1.5 0)"/><path d="M15 12.9l4 2.1v4.6l-4 2.3-4-2.3v-4.6z" transform="translate(-1.5 0)"/></svg>',
+    "puzzle": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 4.5h3a1.5 1.5 0 0 1 1.5 1.5v2.3a1.7 1.7 0 0 0 2.9 1.2 1.7 1.7 0 0 1 2.9 1.2 1.7 1.7 0 0 1-1.7 1.7H16.5a1.5 1.5 0 0 0-1.5 1.5v2.6a1.5 1.5 0 0 1-1.5 1.5h-2.6a1.7 1.7 0 0 0-1.7-1.7 1.7 1.7 0 0 0-1.7 1.7H5.5A1.5 1.5 0 0 1 4 16.3v-2.6a1.5 1.5 0 0 1 1.5-1.5H8a1.7 1.7 0 0 0 1.7-1.7A1.7 1.7 0 0 0 8 9a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 8 4.5z"/></svg>',
+}
+
+
+def esc(s) -> str:
+    return html.escape("" if s is None else str(s))
+
+
+# ---- Hero images ----
+# No illustrations or photography are shipped by default (removed for legal
+# safety). To add a real, approved image to a page's hero later: drop the
+# image file in the repo (e.g. images/about-hero.png) and add one line to
+# HERO_IMAGES below mapping that page's id to the file's path. Nothing else
+# needs to change — render_hero() picks it up automatically, and pages
+# without an entry simply render without a hero image, exactly as now.
+HERO_IMAGES: dict[str, str] = {
+    "about": "rdz.png",
+    # "architecture-standards": "images/architecture-standards-hero.png",
+    # "technical-governance": "images/technical-governance-hero.png",
+    # "nbi": "images/nbi-hero.png",
+    # "sbi": "images/sbi-hero.png",
+    # "hwcompat": "images/hwcompat-hero.png",
+}
+
+
+def render_hero(eyebrow: str, title: str, lede: str, badges_html: str = "", compact: bool = False, visual_key: str = "about") -> str:
+    """Shared hero markup: eyebrow, heading, lede paragraph, optional badge
+    row, and — only if one is registered in HERO_IMAGES for this page — an
+    image on wide screens. Used by every page so any future hero image
+    change applies everywhere consistently.
+    title/lede are escaped here — pass plain text, not pre-escaped HTML."""
+    pad = "48px 40px 40px" if compact else "64px 40px 48px"
+    title_style = ' style="font-size:2rem;"' if compact else ""
+    badges = f'<div class="badge-row">{badges_html}</div>' if badges_html else ""
+    image_path = HERO_IMAGES.get(visual_key)
+    visual = f'<div class="hero-visual"><img src="{esc(image_path)}" alt=""></div>' if image_path else ""
+    return f'''
+<div class="hero" style="padding:{pad};">
+  <div class="hero-flex">
+    <div class="hero-inner">
+      <span class="eyebrow">{esc(eyebrow)}</span>
+      <h1{title_style}>{esc(title)}</h1>
+      <p class="lede">{esc(lede)}</p>
+      {badges}
+    </div>
+    {visual}
+  </div>
+</div>
+'''
+
+
+def render_quicklinks(items: list[dict], variant: str = "row") -> str:
+    """A row of colorful teaser cards — icon, short title, an "Explore" link.
+    Each item: {icon, title, href, color}, plus an optional "desc" line.
+    `href` can be a same-page anchor (e.g. "#goal-reuse") to jump further
+    down the page rather than navigating away. variant="grid" renders the
+    bigger 5-across overview layout (with the "desc" line shown) instead of
+    the compact horizontal-scroll row."""
+    cards = []
+    for it in items:
+        icon_svg = ICONS.get(it["icon"], "")
+        desc = f'<div class="ql-desc">{esc(it["desc"])}</div>' if variant == "grid" and it.get("desc") else ""
+        cards.append(f'''
+    <a class="quicklink-card" href="{esc(it["href"])}" style="--ql-color:{esc(it["color"])};">
+      <span class="ql-icon">{icon_svg}</span>
+      <div class="ql-title">{esc(it["title"])}</div>
+      {desc}
+      <div class="ql-cta">Explore &rarr;</div>
+    </a>''')
+    row_class = "quicklink-row grid" if variant == "grid" else "quicklink-row"
+    return f'<div class="{row_class}">{"".join(cards)}</div>'
+
+
+def render_tabs(tabs: list[dict]) -> str:
+    """Sticky in-page tab bar. Each item: {id, label}. Pairs with
+    <div class="tab-panel" id="tab-{id}"> sections in the body — TABS_SCRIPT
+    (below) wires up the click handling, the active underline, and
+    hash-based deep-linking (e.g. index.html#testing opens on that tab)."""
+    buttons = "".join(
+        f'<button class="tab-btn{" active" if i == 0 else ""}" data-tab="{esc(t["id"])}">{esc(t["label"])}</button>'
+        for i, t in enumerate(tabs)
+    )
+    return f'<div class="tabs-bar"><div class="tabs-inner">{buttons}</div></div>'
+
+
+TABS_SCRIPT = """
+<script>
+(function () {
+  const buttons = Array.from(document.querySelectorAll('.tab-btn'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel'));
+  if (!buttons.length || !panels.length) return;
+
+  function activate(id, updateHash) {
+    let matched = false;
+    buttons.forEach(b => {
+      const isMatch = b.dataset.tab === id;
+      b.classList.toggle('active', isMatch);
+      if (isMatch) matched = true;
+    });
+    if (!matched) return;
+    panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
+    if (updateHash) history.replaceState(null, '', '#' + id);
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab, true)));
+
+  // "Explore" links point to #anchors that live inside other tab panels
+  // (hidden via display:none). Switch to that tab first, then scroll.
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) return;
+    const panel = target.closest('.tab-panel');
+    if (!panel) return;
+    e.preventDefault();
+    activate(panel.id.replace('tab-', ''), true);
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  });
+
+  const initial = (location.hash || '').replace('#', '');
+  if (initial && buttons.some(b => b.dataset.tab === initial)) {
+    activate(initial, false);
+  }
+})();
+</script>
+"""
+
+
+def render_topnav(active_id: str, path_prefix: str = "") -> str:
+    """path_prefix: relative-path prefix for links to root-level pages and
+    the logo, e.g. "../" when rendering a page one directory deeper than the
+    repo root (components/index.html). Root-level pages pass "" (default)."""
+    links_html = []
+    for entry in NAV_LINKS:
+        kind = entry[0]
+        if kind == "link":
+            _, id_, label, href, external = entry
+            if id_ == "components":
+                continue  # placed separately, right after "About", not in normal order
+            cls = "active" if id_ == active_id else ""
+            links_html.append(f'<a class="{cls}" href="{esc(path_prefix + href)}">{esc(label)}</a>')
+            if id_ == "about":
+                # "Core RDK Components" goes immediately after the About link.
+                # When we ARE the components page, link to self ("."); otherwise
+                # link down into components/ from wherever we are.
+                cta_href = "." if active_id == "components" else path_prefix + COMPONENTS_URL
+                links_html.append(f'<a class="cta" href="{esc(cta_href)}">Core RDK Components ↗</a>')
+        else:  # "group"
+            _, group_id, group_label, children = entry
+            child_ids = {c[1] for c in children}
+            toggle_cls = "active" if active_id in child_ids else ""
+            open_cls = "open" if active_id in child_ids else ""
+            child_links = "".join(
+                f'<a class="{"active" if cid == active_id else ""}" href="{esc(path_prefix + chref)}">{esc(clabel)}</a>'
+                for _, cid, clabel, chref, _cext in children
+            )
+            links_html.append(f'''<div class="nav-group {open_cls}">
+      <button type="button" class="nav-group-toggle {toggle_cls}">{esc(group_label)} <span class="caret">&#9662;</span></button>
+      <div class="nav-dropdown"><div class="nav-dropdown-inner">{child_links}</div></div>
+    </div>''')
+    return f'''<div class="topnav">
+  <div class="brand">
+    <img src="{esc(path_prefix)}RDK-logo.png" alt="RDK-B Core Broadband logo" onerror="this.style.display='none'">
+  </div>
+  <nav>
+    {"".join(links_html)}
+  </nav>
+</div>
+<script>
+  // Click-to-toggle for touch devices; desktop still gets :hover/:focus-within
+  // from CSS for free. Closes other open groups and closes on outside click.
+  document.querySelectorAll('.nav-group-toggle').forEach(btn => {{
+    btn.addEventListener('click', (e) => {{
+      e.stopPropagation();
+      const group = btn.closest('.nav-group');
+      const wasOpen = group.classList.contains('open');
+      document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+      if (!wasOpen) group.classList.add('open');
+    }});
+  }});
+  document.addEventListener('click', () => {{
+    document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+  }});
+
+  // Belt-and-braces for mouse users: mirror hover with 'open' via JS too, with
+  // a short close delay, so the menu survives brief gaps/edge cases in pure
+  // CSS :hover tracking instead of relying on it alone.
+  let navCloseTimer = null;
+  document.querySelectorAll('.nav-group').forEach(group => {{
+    group.addEventListener('mouseenter', () => {{
+      clearTimeout(navCloseTimer);
+      document.querySelectorAll('.nav-group.open').forEach(g => {{ if (g !== group) g.classList.remove('open'); }});
+      group.classList.add('open');
+    }});
+    group.addEventListener('mouseleave', () => {{
+      navCloseTimer = setTimeout(() => group.classList.remove('open'), 250);
+    }});
+  }});
+</script>'''
+
+
+CHATBOX_HTML = """
+<button class="chatbox-toggle" id="chatbox-toggle" aria-label="Search the site">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.9 7.8L3 21l1.7-6.1A8.5 8.5 0 1 1 21 11.5z"/></svg>
+</button>
+<div class="chatbox-panel" id="chatbox-panel">
+  <div class="chatbox-header">
+    <div>
+      <div class="title">Search RDK-B Core Broadband</div>
+      <div class="subtitle">Keyword search across this site — not an AI, just a fast index</div>
+    </div>
+    <button class="chatbox-close" id="chatbox-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="chatbox-body" id="chatbox-body">
+    <div class="chatbox-welcome">Try: "WAN Manager", "RBUS", "TR-181", "boot chain", "modularity"...</div>
+  </div>
+  <form class="chatbox-form" id="chatbox-form">
+    <input class="chatbox-input" id="chatbox-input" type="text" placeholder="Ask a question…" autocomplete="off">
+    <button class="chatbox-submit" type="submit">Search</button>
+  </form>
+</div>
+"""
+
+def render_chatbox_script(path_prefix: str = "") -> str:
+    return f"""
+<script>
+(function() {{
+  let searchDocs = null;
+
+  function esc(s) {{
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+  }}
+
+  function score(doc, terms) {{
+    const title = doc.title.toLowerCase();
+    const text = doc.text.toLowerCase();
+    let s = 0;
+    for (const t of terms) {{
+      if (title.includes(t)) s += 10;
+      if (text.includes(t)) s += 2;
+    }}
+    return s;
+  }}
+
+  function runSearch(query) {{
+    const body = document.getElementById('chatbox-body');
+    const terms = query.toLowerCase().split(/\\s+/).filter(Boolean);
+    if (!terms.length) return;
+
+    if (!searchDocs) {{
+      body.innerHTML = '<div class="chatbox-welcome">Loading search index…</div>';
+      fetch('{path_prefix}search-index.json', {{ cache: 'no-store' }})
+        .then(r => {{ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }})
+        .then(data => {{ searchDocs = data.docs; renderResults(query, terms); }})
+        .catch(err => {{ body.innerHTML = '<div class="chatbox-welcome">Could not load the search index (' + esc(err.message) + ').</div>'; }});
+      return;
+    }}
+    renderResults(query, terms);
+  }}
+
+  function renderResults(query, terms) {{
+    const body = document.getElementById('chatbox-body');
+    const scored = searchDocs
+      .map(doc => ({{ doc, s: score(doc, terms) }}))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s);
+
+    if (!scored.length) {{
+      body.innerHTML = '<div class="chatbox-welcome">No matches for "' + esc(query) + '". Try a different term — component names, standard names, or words like "modularity" or "RBUS" work well.</div>';
+      return;
+    }}
+
+    const best = scored[0].doc;
+    const rest = scored.slice(1, 6);
+
+    let html = '<div class="chatbox-answer">' +
+      '<div class="cb-cat">' + esc(best.category) + '</div>' +
+      '<div class="cb-title">' + esc(best.title) + '</div>' +
+      '<div class="cb-text">' + esc(best.text) + '</div>' +
+      '</div>';
+
+    if (rest.length) {{
+      html += '<div class="chatbox-related">Related</div>';
+      html += rest.map(x => {{
+        let href = x.doc.url.endsWith('#') ? x.doc.url.slice(0, -1) || '#' : x.doc.url;
+        if (href !== '#' && !/^([a-z]+:)?\\/\\//i.test(href)) href = '{path_prefix}' + href;
+        return '<a class="chatbox-result" href="' + esc(href) + '">' +
+          '<div class="cb-r-title">' + esc(x.doc.title) + '</div>' +
+          '<div class="cb-r-cat">' + esc(x.doc.category) + '</div>' +
+          '</a>';
+      }}).join('');
+    }}
+    body.innerHTML = html;
+  }}
+
+  const toggle = document.getElementById('chatbox-toggle');
+  const panel = document.getElementById('chatbox-panel');
+  const closeBtn = document.getElementById('chatbox-close');
+  const form = document.getElementById('chatbox-form');
+  const input = document.getElementById('chatbox-input');
+
+  toggle.addEventListener('click', () => {{ panel.classList.toggle('open'); if (panel.classList.contains('open')) input.focus(); }});
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  form.addEventListener('submit', (e) => {{ e.preventDefault(); if (input.value.trim()) runSearch(input.value.trim()); }});
+}})();
+</script>
+"""
+
+# support@rdkcentral.com receives every submission. FormSubmit.co needs no
+# signup/API key — the first real submission triggers a one-time
+# confirmation email asking you to click "Activate Form"; every submission
+# after that lands straight in the inbox. Sent via their /ajax/ endpoint so
+# the page never redirects away — the result renders in this same panel.
+CONTACT_EMAIL = "chandrakanth_pokuru2@comcast.com"
+
+CONTACT_HTML = f"""
+<button class="contact-toggle" id="contact-toggle" aria-label="Contact us">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M3 6l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+</button>
+<div class="contact-panel" id="contact-panel">
+  <div class="contact-header">
+    <div>
+      <div class="title">Contact us</div>
+      <div class="subtitle">Send a message — we'll get it by email</div>
+    </div>
+    <button class="contact-close" id="contact-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="contact-body">
+    <form id="contact-form">
+      <div class="contact-field">
+        <label for="contact-name">Name</label>
+        <input id="contact-name" name="name" type="text" required>
+      </div>
+      <div class="contact-field">
+        <label for="contact-email">Your email</label>
+        <input id="contact-email" name="email" type="email" required>
+      </div>
+      <div class="contact-field">
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" name="message" rows="4" required></textarea>
+      </div>
+      <button class="contact-submit" id="contact-submit" type="submit">Send</button>
+      <div class="contact-status" id="contact-status"></div>
+    </form>
+    <a class="contact-mailto" href="mailto:{CONTACT_EMAIL}">Or email {CONTACT_EMAIL} directly</a>
+  </div>
+</div>
+"""
+
+CONTACT_SCRIPT = f"""
+<script>
+(function() {{
+  const toggle = document.getElementById('contact-toggle');
+  const panel = document.getElementById('contact-panel');
+  const closeBtn = document.getElementById('contact-close');
+  const form = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('contact-submit');
+  const status = document.getElementById('contact-status');
+
+  toggle.addEventListener('click', () => {{
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) document.getElementById('contact-name').focus();
+  }});
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+  form.addEventListener('submit', function(e) {{
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    status.textContent = '';
+    status.className = 'contact-status';
+
+    const payload = {{
+      name: document.getElementById('contact-name').value,
+      email: document.getElementById('contact-email').value,
+      message: document.getElementById('contact-message').value,
+      _subject: 'New message from RDK-B Core Broadband site',
+    }};
+
+    fetch('https://formsubmit.co/ajax/{CONTACT_EMAIL}', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json', 'Accept': 'application/json' }},
+      body: JSON.stringify(payload),
+    }})
+      .then(res => {{ if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); }})
+      .then(() => {{
+        status.textContent = 'Sent — thanks! We\\'ll get back to you.';
+        status.className = 'contact-status ok';
+        form.reset();
+      }})
+      .catch(err => {{
+        status.textContent = 'Could not send (' + err.message + '). Try the email link below instead.';
+        status.className = 'contact-status err';
+      }})
+      .finally(() => {{
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send';
+      }});
+  }});
+}})();
+</script>
+"""
+
+
+def render_page(active_id: str, head_extra: str, body_html: str, script: str = "", path_prefix: str = "") -> str:
+    """Wrap body_html (hero + sections + footer, everything but <head>/sidebar)
+    in the shared shell. body_html should NOT include <html>/<head>/<body> tags.
+    Pass any <script> block via `script`, not inside head_extra — head_extra
+    renders inside <head>, before the body (and the elements a script needs
+    to attach to) exists yet. `script` renders at the very end of <body>,
+    after body_html, so document.getElementById(...) etc. always find real
+    elements instead of null."""
+    return f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>{SHARED_CSS}</style>
+{head_extra}
+</head>
+<body>
+<div class="accent-bar"></div>
+{render_topnav(active_id, path_prefix)}
+<div class="page-main">
+{body_html}
+</div>
+{CHATBOX_HTML}
+{CONTACT_HTML}
+{script}
+{render_chatbox_script(path_prefix)}
+{CONTACT_SCRIPT}
+</body>
+</html>
+'''
+
+
+# ---------- generic "stub" page renderer ----------
+#
+# Used by any page that just needs the shared shell + a client-side loader
+# for a JSON/XML data file that may not exist yet (renders a clean "no data
+# published yet" empty state until one shows up next to the page). One page
+# = one call to render_stub_page(); each generator script that wants this
+# (gen_stub_pages.py, gen_component_registry_page.py, etc.) owns its own
+# PAGE dict and writes its own file — this function only owns the shared
+# markup/JS so it isn't duplicated across those scripts.
+
+STUB_LOADER_SCRIPT_TEMPLATE = """
+<script>
+const TABLES = {tables_json};
+
+function esc(s) {{
+  const d = document.createElement('div');
+  d.textContent = s ?? '';
+  return d.innerHTML;
+}}
+
+// Very small generic XML -> plain-object walker. Repeated sibling tags
+// become an array; text-only leaves become strings. Good enough for a
+// simple "list of records" style XML file; deeply irregular XML falls
+// back to the raw-tree renderer further down.
+function xmlToObj(node) {{
+  const children = Array.from(node.children);
+  if (children.length === 0) {{
+    return (node.textContent || '').trim();
+  }}
+  const out = {{}};
+  for (const child of children) {{
+    const val = xmlToObj(child);
+    if (out[child.tagName] === undefined) {{
+      out[child.tagName] = val;
+    }} else if (Array.isArray(out[child.tagName])) {{
+      out[child.tagName].push(val);
+    }} else {{
+      out[child.tagName] = [out[child.tagName], val];
+    }}
+  }}
+  return out;
+}}
+
+function findRecordArray(value) {{
+  // Walk a parsed JSON/XML object looking for the first array of
+  // same-shaped flat objects — that's almost certainly "the data".
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object') {{
+    for (const v of Object.values(value)) {{
+      const found = findRecordArray(v);
+      if (found) return found;
+    }}
+  }}
+  return null;
+}}
+
+function renderTable(rows) {{
+  const isFlatObjectArray = rows.every(r => r && typeof r === 'object' && !Array.isArray(r));
+  if (!isFlatObjectArray) {{
+    return '<ul class="def-table" style="list-style:none;padding:0;">' +
+      rows.map(r => `<li style="padding:9px 12px;border-bottom:1px solid var(--border);">${{esc(String(r))}}</li>`).join('') +
+      '</ul>';
+  }}
+  const cols = Object.keys(rows[0]);
+  return `<table class="def-table"><thead><tr>${{cols.map(c => `<th>${{esc(c)}}</th>`).join('')}}</tr></thead><tbody>` +
+    rows.map(r => `<tr>${{cols.map(c => `<td>${{esc(r[c])}}</td>`).join('')}}</tr>`).join('') +
+    '</tbody></table>';
+}}
+
+function renderTree(value) {{
+  return `<pre style="background:#0b1220;color:#cbd5e1;padding:20px;border-radius:10px;overflow-x:auto;font-size:0.85rem;">${{esc(JSON.stringify(value, null, 2))}}</pre>`;
+}}
+
+function renderSections(sections) {{
+  let html = '';
+  for (const s of sections) {{
+    const level = s.level || 2;
+    const tag = level <= 2 ? 'h3' : (level === 3 ? 'h4' : 'h5');
+    html += `<div class="gov-section level-${{level}}">`;
+    html += `<${{tag}}><span class="gov-num">${{esc(s.number)}}</span><span>${{esc(s.title)}}</span></${{tag}}>`;
+    let listOpen = false;
+    for (const b of (s.blocks || [])) {{
+      if (b.type === 'table') {{
+        if (listOpen) {{ html += '</ul>'; listOpen = false; }}
+        html += '<table class="def-table"><thead><tr>' + b.headers.map(h => `<th>${{esc(h)}}</th>`).join('') + '</tr></thead><tbody>' +
+          b.rows.map(r => `<tr>${{r.map(c => `<td>${{esc(c)}}</td>`).join('')}}</tr>`).join('') + '</tbody></table>';
+      }} else if (b.type === 'pre') {{
+        if (listOpen) {{ html += '</ul>'; listOpen = false; }}
+        html += `<pre class="code-block">${{esc(b.text)}}</pre>`;
+      }} else if (b.type === 'h') {{
+        if (listOpen) {{ html += '</ul>'; listOpen = false; }}
+        html += `<h5 class="gov-subhead">${{esc(b.text)}}</h5>`;
+      }} else if (b.type === 'li') {{
+        if (!listOpen) {{ html += '<ul>'; listOpen = true; }}
+        html += `<li>${{esc(b.text)}}</li>`;
+      }} else {{
+        if (listOpen) {{ html += '</ul>'; listOpen = false; }}
+        html += `<p>${{esc(b.text)}}</p>`;
+      }}
+    }}
+    if (listOpen) html += '</ul>';
+    html += '</div>';
+  }}
+  return html;
+}}
+
+function render(containerId, value, kind) {{
+  const content = document.getElementById(containerId);
+  if (kind === 'sections') {{
+    const sections = Array.isArray(value) ? value : (Array.isArray(value && value.docs) ? value.docs : findRecordArray(value));
+    content.innerHTML = sections ? renderSections(sections) : renderTree(value);
+    return;
+  }}
+  const records = findRecordArray(value);
+  content.innerHTML = records ? renderTable(records) : renderTree(value);
+}}
+
+function showEmptyState(containerId, jsonFile, xmlFile) {{
+  document.getElementById(containerId).innerHTML = `
+    <div class="empty-state">
+      <div class="icon">📄</div>
+      <h3>No data published yet</h3>
+      <p>This section renders automatically once a data file is added.<br>Drop either file next to this page:</p>
+      <p><code>${{esc(jsonFile)}}</code> &nbsp;or&nbsp; <code>${{esc(xmlFile)}}</code></p>
+    </div>`;
+}}
+
+function loadTable(t) {{
+  const jsonFile = t.slug + '.json';
+  const xmlFile = t.slug + '.xml';
+  fetch(jsonFile, {{ cache: 'no-store' }})
+    .then(res => {{ if (!res.ok) throw new Error('no json'); return res.json(); }})
+    .then(data => render(t.containerId, data, t.kind))
+    .catch(() => {{
+      fetch(xmlFile, {{ cache: 'no-store' }})
+        .then(res => {{ if (!res.ok) throw new Error('no xml'); return res.text(); }})
+        .then(text => {{
+          const xml = new DOMParser().parseFromString(text, 'application/xml');
+          if (xml.getElementsByTagName('parsererror').length > 0) throw new Error('bad xml');
+          render(t.containerId, xmlToObj(xml.documentElement), t.kind);
+        }})
+        .catch(() => showEmptyState(t.containerId, jsonFile, xmlFile));
+    }});
+}}
+
+TABLES.forEach(loadTable);
+</script>
+"""
+
+
+def render_stub_page(page: dict) -> str:
+    """Render one stub page from a page dict:
+      {active_id, slug, eyebrow, title, lede, tables?: [{slug, kind?, heading?, blurb?}]}
+    'tables' defaults to a single table keyed on the page's own slug. Each
+    table gets a client-side loader that tries <slug>.json then <slug>.xml
+    next to the page and renders whatever it finds, or a "no data yet"
+    empty state if neither exists.
+    """
+    tables = page.get("tables") or [{"slug": page["slug"]}]
+    sections = []
+    tables_js = []
+    for i, t in enumerate(tables):
+        container_id = "data-content" if i == 0 else f"data-content-{i + 1}"
+        tables_js.append({"containerId": container_id, "slug": t["slug"], "kind": t.get("kind", "table")})
+        heading_html = ""
+        if t.get("heading"):
+            blurb = f'<p>{t["blurb"]}</p>' if t.get("blurb") else ""
+            heading_html = f'<div class="section-head"><h2>{t["heading"]}</h2>{blurb}</div>'
+        sections.append(f'''
+<section class="tight-top">
+  {heading_html}
+  <div id="{container_id}"><div class="empty-state"><p>Loading…</p></div></div>
+</section>
+''')
+
+    body = render_hero(page["eyebrow"], page["title"], page["lede"], compact=True, visual_key=page["active_id"]) \
+        + "".join(sections)
+    head_extra = f"<title>{page['title']} — RDK-B Core Broadband</title>\n" + \
+        STUB_LOADER_SCRIPT_TEMPLATE.format(tables_json=json.dumps(tables_js))
+    return render_page(page["active_id"], head_extra, body)

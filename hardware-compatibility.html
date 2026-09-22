@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bedrock: #080d18; --hal: #16305a; --middleware: #2a5cf0; --mgmt: #0aa66e;
+    --cloud-bg: #eef1ff; --cloud-fg: #3730a3; --ink: #0b1220; --muted: #5b6472;
+    --page-bg: #f6f7fb; --card-bg: #ffffff; --border: #e5e8f0;
+    --amber-fg: #b45309; --amber-bg: #fef3c7;
+    --sidebar-w: 268px;
+    --rdk-blue: #29b6e8; --rdk-amber: #f5a623; --rdk-green: #7ac943; --rdk-orange: #f0653e;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06), 0 1px 1px rgba(15,23,42,0.04);
+    --shadow-md: 0 8px 24px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--ink); background: var(--page-bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  a { color: var(--middleware); }
+  h1, h2, h3, h4 { font-family: "Space Grotesk", "Inter", sans-serif; font-weight: 700; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
+  p { margin: 0 0 12px; color: var(--muted); }
+
+  /* ---- top accent bar, echoes the RDK mark's four bars ---- */
+  .accent-bar {
+    height: 5px; width: 100%;
+    background: linear-gradient(90deg, var(--rdk-blue) 0%, var(--rdk-blue) 25%, var(--rdk-green) 25%, var(--rdk-green) 50%, var(--rdk-amber) 50%, var(--rdk-amber) 75%, var(--rdk-orange) 75%, var(--rdk-orange) 100%);
+    position: fixed; top: 0; left: 0; z-index: 60;
+  }
+
+  /* ---- top nav (mega-nav style) ---- */
+  .topnav {
+    position: fixed; top: 5px; left: 0; right: 0; z-index: 50;
+    background: rgba(8,13,24,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px; gap: 20px;
+  }
+  .topnav .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+  .topnav .brand img { height: 26px; width: auto; display: block; }
+  .topnav .brand-text { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.86rem; color: #fff; white-space: nowrap; }
+  .topnav nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 8px; flex: 1 1 auto; min-width: 0; }
+
+  /* Every nav control — plain links, dropdown toggles, all of it — shares
+     this one pill style so the whole bar reads as one consistent design
+     echoing the "Core RDK Components" CTA's blue, instead of a mix of plain
+     text and boxes. */
+  .topnav > nav > a, .nav-group-toggle {
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+    background: linear-gradient(90deg, var(--rdk-blue), #7c3aed); border: none;
+    font-family: inherit; color: #fff; text-decoration: none; font-size: 0.82rem; font-weight: 500;
+    line-height: 1.6; box-sizing: border-box; appearance: none; -webkit-appearance: none;
+    padding: 7px 13px; border-radius: 999px; white-space: nowrap; transition: all 0.12s; outline: none;
+  }
+  .topnav > nav > a:hover, .nav-group-toggle:hover { filter: brightness(1.12); }
+  .topnav > nav > a.active, .nav-group.open .nav-group-toggle, .nav-group-toggle.active {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.6) inset; font-weight: 700;
+  }
+  .topnav > nav > a .ext-arrow { font-size: 0.78em; color: #e6ebff; }
+  .topnav > nav > a:focus-visible, .nav-group-toggle:focus-visible {
+    outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.55); color: #fff;
+  }
+  .topnav .cta {
+    flex: 0 0 auto; background: linear-gradient(90deg, var(--rdk-blue), #7c3aed); color: #fff;
+    font-size: 0.76rem; font-weight: 600; padding: 7px 14px; border-radius: 999px;
+    text-decoration: none; white-space: nowrap; border: none;
+  }
+
+  /* ---- nav dropdown groups (Standards, North Bound APIs) ---- */
+  .nav-group { position: relative; flex: 0 0 auto; }
+  .nav-group-toggle .caret { font-size: 0.65em; transition: transform 0.15s; }
+  .nav-group.open .nav-group-toggle .caret { transform: rotate(180deg); }
+  .nav-dropdown {
+    display: none; position: absolute; top: 100%; left: 0; padding-top: 8px; z-index: 55;
+  }
+  .nav-group:hover .nav-dropdown, .nav-group.open .nav-dropdown, .nav-group:focus-within .nav-dropdown { display: block; }
+  .nav-dropdown-inner {
+    min-width: 230px; background: #10182b; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+    box-shadow: var(--shadow-md); padding: 6px;
+  }
+  .nav-dropdown a, .nav-dropdown a:visited {
+    display: block; color: #fff; text-decoration: none; font-size: 0.84rem; font-weight: 500;
+    padding: 9px 12px; border-radius: 7px; white-space: nowrap; border-bottom: none;
+  }
+  .nav-dropdown a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-dropdown a.active, .nav-dropdown a.active:visited {
+    color: #fff; font-weight: 700; background: rgba(41,182,232,0.28);
+  }
+  .nav-dropdown a:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.45) inset; }
+
+  /* ---- main content area ---- */
+  .page-main { min-height: 100vh; margin-top: 61px; }
+
+  @media (max-width: 900px) {
+    .topnav { flex-wrap: wrap; padding: 10px 16px; }
+    .topnav nav { order: 3; width: 100%; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
+    .page-main { margin-top: 108px; }
+    .nav-dropdown { position: static; padding-top: 0; }
+    .nav-dropdown-inner { box-shadow: none; border: none; background: rgba(255,255,255,0.03); margin: 2px 0 6px 12px; }
+  }
+
+  /* ---- hero ---- */
+  .hero {
+    background:
+      radial-gradient(ellipse 480px 320px at 12% 10%, rgba(41,182,232,0.35), transparent 60%),
+      radial-gradient(ellipse 420px 320px at 92% 85%, rgba(122,201,67,0.18), transparent 60%),
+      linear-gradient(120deg, #0a1a3d 0%, #17246a 40%, #2b1a5e 75%, #3a1a4c 100%);
+    color: #fff; padding: 68px 44px 52px; position: relative; overflow: hidden;
+  }
+  .hero-flex { display: flex; align-items: center; gap: 44px; max-width: 1520px; }
+  .hero-inner { max-width: 640px; flex: 1 1 auto; min-width: 0; }
+  .hero-visual { flex: 0 0 540px; max-width: 540px; display: flex; justify-content: flex-end; align-items: center; margin-left: auto; overflow: hidden; }
+  .hero-visual img { width: 100%; max-width: 540px; height: auto; object-fit: contain; mix-blend-mode: lighten; opacity: .92; -webkit-mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 78% 78% at 50% 50%, #000 62%, transparent 100%); }
+  @media (max-width: 1300px) { .hero-visual { flex-basis: 420px; max-width: 420px; } .hero-visual img { max-width: 420px; } }
+  @media (max-width: 1000px) { .hero-visual { display: none; } }
+
+  .eyebrow { display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: #7ec4f2; border: 1px solid rgba(126,196,242,0.35); background: rgba(126,196,242,0.06); border-radius: 999px; padding: 5px 13px; margin-bottom: 20px; }
+  .hero h1 { font-size: 2.5rem; line-height: 1.12; color: #fff; max-width: 760px; }
+  .hero .lede { color: #a9b8d6; font-size: 1.08rem; max-width: 640px; margin-top: 16px; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .badge { display: inline-block; margin: 0 10px 10px 0; font-size: 0.8rem; font-weight: 600; padding: 7px 14px; border-radius: 999px; background: rgba(255,255,255,0.07); color: #dbe4f3; border: 1px solid rgba(255,255,255,0.12); }
+  .stats {
+    max-width: 1520px; margin: -32px 44px 0; padding: 0; display: flex; gap: 0;
+    background: #fff;
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    position: relative; z-index: 2; box-shadow: var(--shadow-md);
+  }
+  .stat { flex: 1; min-width: 0; background: transparent; padding: 20px 20px; text-align: left; display: flex; align-items: center; gap: 12px; border-top: 3px solid transparent; border-right: 1px solid var(--border); }
+  .stat:last-child { border-right: none; }
+  .stat:nth-child(1) { border-top-color: var(--rdk-blue); }
+  .stat:nth-child(2) { border-top-color: var(--rdk-green); }
+  .stat:nth-child(3) { border-top-color: var(--rdk-amber); }
+  .stat:nth-child(4) { border-top-color: var(--rdk-orange); }
+  .stat:nth-child(5) { border-top-color: var(--middleware); }
+  .stat-icon { flex: 0 0 auto; display: flex; }
+  .stat:nth-child(1) .stat-icon { color: var(--rdk-blue); }
+  .stat:nth-child(2) .stat-icon { color: var(--rdk-green); }
+  .stat:nth-child(3) .stat-icon { color: var(--rdk-amber); }
+  .stat:nth-child(4) .stat-icon { color: var(--rdk-orange); }
+  .stat:nth-child(5) .stat-icon { color: var(--middleware); }
+  .stat .num { font-family: "Space Grotesk", sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .stat .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-weight: 500; }
+  @media (max-width: 760px) { .stats { flex-wrap: wrap; margin: -20px 16px 0; } .stat { flex: 1 1 40%; border-right: none; border-bottom: 1px solid var(--border); } .hero { padding: 48px 20px 40px; } }
+
+  /* ---- sections ---- */
+  section { max-width: 1520px; margin: 0; padding: 60px 44px; }
+  section.tight-top { padding-top: 52px; }
+  @media (max-width: 760px) { section { padding: 40px 20px; } }
+  .section-head { margin-bottom: 34px; }
+  .section-head .eyebrow-lt { font-family: "JetBrains Mono", monospace; font-size: 0.74rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--middleware); font-weight: 600; margin-bottom: 9px; display: block; }
+  .section-head h2 { font-size: 1.85rem; }
+  .section-head p { margin-top: 11px; font-size: 1.02rem; max-width: 680px; }
+  .callout { max-width: 820px; background: linear-gradient(135deg, #eef2ff 0%, #f3f0ff 100%); border: 1px solid #d3dbfb; border-left: 4px solid var(--middleware); border-radius: 10px; padding: 22px 26px; margin: 18px 0; }
+  .callout strong { color: var(--ink); display: block; margin-bottom: 5px; font-size: 0.95rem; font-family: "Space Grotesk", sans-serif; }
+  .callout p { margin: 0; font-size: 0.95rem; }
+  .two-col { display: flex; gap: 28px; }
+  .two-col > * { flex: 1; min-width: 0; }
+  @media (max-width: 760px) { .two-col { flex-direction: column; } }
+  .card { max-width: 820px; background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid var(--middleware); border-radius: 12px; padding: 22px 24px; box-shadow: var(--shadow-sm); transition: box-shadow 0.15s, transform 0.15s; }
+
+  /* ---- quick-link card row (colorful teaser cards, e.g. "Why RDKB Core") ---- */
+  .quicklink-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; margin: 4px 0 8px; }
+  .quicklink-card {
+    flex: 1 1 168px; min-width: 168px; background: var(--card-bg); border: 1px solid var(--border);
+    border-top: 3px solid var(--ql-color, var(--middleware)); border-radius: 12px;
+    padding: 14px 16px; text-decoration: none; box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .quicklink-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .quicklink-card .ql-icon { color: var(--ql-color, var(--middleware)); margin-bottom: 8px; display: block; }
+  .quicklink-card .ql-title { font-size: 0.86rem; font-weight: 600; color: var(--ink); }
+  .quicklink-card .ql-cta { font-size: 0.78rem; font-weight: 600; color: var(--ql-color, var(--middleware)); margin-top: 8px; }
+
+  /* ---- grid variant: bigger overview cards with a description line ---- */
+  .quicklink-row.grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; overflow: visible; }
+  .quicklink-row.grid .quicklink-card { min-width: 0; padding: 22px 20px; }
+  .quicklink-row.grid .ql-icon svg { width: 30px; height: 30px; }
+  .quicklink-row.grid .ql-title { font-size: 1rem; margin-bottom: 6px; }
+  .quicklink-row.grid .ql-desc { font-size: 0.86rem; color: var(--muted); line-height: 1.45; margin-bottom: 10px; }
+  @media (max-width: 1100px) { .quicklink-row.grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .quicklink-row.grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---- dark "feature band" wrapper for the overview grid, echoing the hero ---- */
+  .feature-band {
+    background: linear-gradient(150deg, #0a1a3d 0%, #0c1436 55%, #0a0f24 100%);
+    border-radius: 20px; padding: 34px; margin: 22px 0 8px;
+  }
+  .feature-band .quicklink-card {
+    background: linear-gradient(165deg, rgba(24,46,92,0.85) 0%, rgba(7,13,30,0.95) 100%);
+    border: 1px solid rgba(93,196,255,0.32); border-top: 1px solid rgba(93,196,255,0.32);
+    box-shadow: 0 0 0 1px rgba(93,196,255,0.08) inset, 0 6px 18px rgba(0,0,0,0.3);
+  }
+  .feature-band .quicklink-card:hover {
+    box-shadow: 0 0 0 1px rgba(93,196,255,0.55) inset, 0 14px 30px rgba(0,0,0,0.45);
+    transform: translateY(-3px);
+  }
+  .feature-band .quicklink-card { border-color: var(--ql-color, rgba(93,196,255,0.32)); }
+  .feature-band .ql-icon { color: var(--ql-color, #7dd3fc); filter: drop-shadow(0 0 6px var(--ql-color, rgba(56,189,248,0.55))); }
+  .feature-band .ql-title { color: #f5f8ff; }
+  .feature-band .ql-desc { color: #9fb0d0; }
+  .feature-band .ql-cta { color: var(--ql-color, #5fd0ff); }
+
+  /* ---- in-page tab bar (Overview / Why Core RDK / RDK Ready / Architecture / Testing) ---- */
+  .tabs-bar {
+    position: sticky; top: 61px; z-index: 40;
+    background: linear-gradient(120deg, #0a1a3d 0%, #17246a 40%, #2b1a5e 75%, #3a1a4c 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .tabs-inner { max-width: 1520px; margin: 0 auto; display: flex; gap: 8px; padding: 12px 44px; overflow-x: auto; scrollbar-width: none; }
+  .tabs-inner::-webkit-scrollbar { display: none; }
+  .tab-btn { flex: 0 0 auto; background: none; border: none; border-radius: 10px; padding: 12px 18px; font: 600 0.95rem/1 "Inter", sans-serif; color: rgba(255,255,255,0.72); cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+  /* each tab gets its own accent, echoing the 5-color stripe used in .stats / the overview cards */
+  .tab-btn:nth-child(1) { --tab-color: var(--rdk-blue); }
+  .tab-btn:nth-child(2) { --tab-color: var(--rdk-green); }
+  .tab-btn:nth-child(3) { --tab-color: var(--rdk-amber); }
+  .tab-btn:nth-child(4) { --tab-color: var(--rdk-orange); }
+  .tab-btn:nth-child(5) { --tab-color: var(--middleware); }
+  .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .tab-btn.active { color: #04121f; background: var(--tab-color, var(--rdk-blue)); }
+  .tab-btn.active:hover { color: #04121f; background: var(--tab-color, var(--rdk-blue)); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  @media (max-width: 760px) { .tabs-bar { top: 108px; } }
+
+  /* ---- color-tinted section panels (e.g. Why RDKB Core, RDK Ready, Benefits) ---- */
+  .section-tint { border-radius: 16px; padding: 28px 30px; margin: 28px 0; }
+  .section-tint.tint-blue { background: #e6f1fb; }
+  .section-tint.tint-blue .subhead { color: #0c447c; }
+  .section-tint.tint-green { background: #eaf3de; }
+  .section-tint.tint-green .subhead { color: #27500a; }
+  .section-tint.tint-amber { background: #faeeda; }
+  .section-tint.tint-amber .subhead { color: #854f0b; }
+  .section-tint .card { background: rgba(255,255,255,0.7); }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .card h3 { font-size: 1.02rem; margin-bottom: 9px; }
+  .card p { font-size: 0.92rem; margin: 0; }
+  table.def-table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0 28px;
+    font-size: 0.92rem; border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; box-shadow: var(--shadow-sm);
+  }
+  table.def-table th, table.def-table td { text-align: left; padding: 14px 18px; vertical-align: top; }
+  table.def-table th {
+    font-family: "Space Grotesk", sans-serif; font-size: 0.78rem; text-transform: uppercase;
+    letter-spacing: 0.06em; font-weight: 700; color: #fff;
+    background: linear-gradient(90deg, var(--hal), var(--middleware));
+    border-bottom: none;
+  }
+  table.def-table th:first-child { border-top-left-radius: 12px; }
+  table.def-table th:last-child { border-top-right-radius: 12px; }
+  table.def-table tbody tr { border-bottom: 1px solid var(--border); }
+  table.def-table tbody tr:last-child { border-bottom: none; }
+  table.def-table tbody tr:nth-child(odd) { background: #fbfcff; }
+  table.def-table tbody tr:nth-child(even) { background: #fff; }
+  table.def-table tbody tr:hover { background: var(--cloud-bg); }
+  table.def-table td { color: var(--muted); line-height: 1.65; border-right: 1px solid var(--border); }
+  table.def-table td:last-child { border-right: none; }
+  table.def-table td:first-child {
+    color: var(--ink); font-weight: 700; font-family: "Space Grotesk", sans-serif;
+    font-size: 0.94rem; border-left: 3px solid var(--rdk-blue); background: rgba(41,182,232,0.04);
+    width: 26%; min-width: 200px;
+  }
+  table.def-table td.mono { color: var(--ink); font-weight: 600; }
+
+  /* ---- governance process sections (§7.2 / §7.3 narrative content) ---- */
+  .gov-section.level-2 { padding-top: 22px; margin-top: 22px; border-top: 1px solid var(--border); }
+  .gov-section.level-2:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .gov-section h3, .gov-section h4, .gov-section h5 {
+    display: flex; align-items: baseline; gap: 10px; font-family: "Space Grotesk", sans-serif;
+  }
+  .gov-section h3 { font-size: 1.12rem; }
+  .gov-section h4 { font-size: 1.0rem; margin-top: 14px; }
+  .gov-section h5 { font-size: 0.92rem; color: var(--muted); margin-top: 10px; }
+  .gov-num {
+    font-family: "JetBrains Mono", monospace; font-size: 0.72rem; font-weight: 700;
+    color: #fff; background: var(--middleware); padding: 2px 8px; border-radius: 5px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .gov-section p { margin: 6px 0 10px; font-size: 0.92rem; }
+  .gov-section ul { margin: 6px 0 16px; padding-left: 20px; color: var(--muted); }
+  .gov-section ul li { margin-bottom: 5px; line-height: 1.6; font-size: 0.92rem; }
+  .gov-section table.def-table { margin: 10px 0 18px; font-size: 0.86rem; }
+  .gov-section pre.code-block {
+    background: #0b1220; color: #cbd5e1; padding: 16px 18px; border-radius: 10px;
+    overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 0.8rem;
+    line-height: 1.55; margin: 10px 0 18px; white-space: pre;
+  }
+  .gov-section h5.gov-subhead {
+    font-family: "Space Grotesk", sans-serif; font-size: 0.82rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--middleware);
+    margin: 18px 0 6px; display: block;
+  }
+  .timeline { border-left: 2px solid var(--border); margin-left: 6px; padding-left: 24px; display: flex; flex-direction: column; gap: 18px; }
+  .tl-item { position: relative; }
+  .tl-item::before { content: ""; position: absolute; left: -29px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--middleware); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--middleware); }
+  .tl-year { font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--middleware); font-size: 0.86rem; }
+  .tl-item p { margin: 2px 0 0; font-size: 0.92rem; }
+  .tier-diagram { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+  .tier { display: flex; align-items: stretch; border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .tier:last-child { border-bottom: none; }
+  .tier .num { flex: 0 0 64px; display: flex; align-items: center; justify-content: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.15rem; }
+  .tier .body { flex: 1; padding: 19px 24px; }
+  .tier .body h4 { margin: 0 0 4px; font-size: 1.02rem; }
+  .tier .body p { margin: 0; font-size: 0.88rem; }
+  .tier .body-split { display: flex; padding: 0; }
+  .tier .body-split .split-col { flex: 1; padding: 19px 24px; }
+  .tier .body-split .split-col:first-child { border-right: 1px solid rgba(255,255,255,0.25); }
+  .tier .body-split h4 { margin: 0 0 4px; font-size: 1.02rem; }
+  .tier .body-split p { margin: 0; font-size: 0.88rem; }
+  .tier.t5 { background: #e5e7eb; color: #1f2937; }
+  .tier.t5 .num { background: #d1d5db; color: #1f2937; }
+  .tier.t4 { background: #cfe0fb; color: #10284d; }
+  .tier.t4 .num { background: #9dc0f2; color: #10284d; }
+  .tier.t3 { background: var(--middleware); color: #fff; }
+  .tier.t3 .num { background: #1a3fb5; color: #fff; }
+  .tier.t3 .body p, .tier.t3 .body-split p { color: #dce6ff; }
+  .tier.t3 .body h4, .tier.t3 .body-split h4 { color: #fff; }
+  .tier.t2 { background: var(--hal); color: #fff; }
+  .tier.t2 .num { background: #0e2144; color: #fff; }
+  .tier.t2 .body p { color: #c5d3e6; }
+  .tier.t2 .body h4 { color: #fff; }
+  .tier.t1 { background: var(--bedrock); color: #fff; }
+  .tier.t1 .num { background: #000308; color: #9fb2cf; }
+  .tier.t1 .body p { color: #9fb2cf; }
+  .tier.t1 .body h4 { color: #fff; }
+  .tier-caption { text-align: center; font-size: 0.82rem; color: var(--muted); margin-top: 12px; }
+  .layer-stack { display: flex; flex-direction: column; gap: 6px; }
+  .layer-box { margin-bottom: 6px; border-radius: 9px; padding: 13px 16px; font-size: 0.86rem; font-weight: 600; text-align: center; }
+  .layer-box:last-child { margin-bottom: 0; }
+  .layer-box.top { background: var(--middleware); color: #fff; }
+  .layer-box.mid { background: var(--hal); color: #fff; }
+  .layer-box.bot { background: #e2e8f0; color: var(--ink); }
+  .subhead { font-family: "Space Grotesk", sans-serif; font-size: 1.2rem; font-weight: 700; margin: 36px 0 14px; }
+  .subhead:first-of-type { margin-top: 8px; }
+  footer { background: var(--bedrock); color: #9fb2cf; padding: 44px 44px 30px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 28px; margin-bottom: 22px; max-width: 900px; }
+  .footer-links a { display: block; min-width: 200px; margin: 0 28px 14px 0; color: #dbe4f3; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+  .footer-links a span { display: block; font-weight: 400; color: #8493ab; font-size: 0.8rem; margin-top: 2px; }
+  .footer-meta { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px; font-size: 0.78rem; color: #7386a3; max-width: 900px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { display: inline-block; margin: 0 8px 8px 0; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: #f1f3f9; color: var(--ink); border: 1px solid var(--border); }
+
+  /* ---- empty-state (for the not-yet-populated API/HW pages) ---- */
+  .empty-state { max-width: 560px; margin: 40px auto; text-align: center; padding: 48px 32px; background: #fff; border: 1px dashed var(--border); border-radius: 16px; }
+  .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  .empty-state p { font-size: 0.92rem; }
+  .empty-state code { display: inline-block; background: #f1f3f9; padding: 2px 8px; border-radius: 5px; margin-top: 4px; }
+
+  /* ---- floating search chatbox (site-wide, every page) ---- */
+  .chatbox-toggle {
+    position: fixed; bottom: 22px; right: 22px; z-index: 90;
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--rdk-blue), #7c3aed); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(26,86,219,0.4);
+  }
+  .chatbox-toggle svg { width: 24px; height: 24px; }
+  .chatbox-panel {
+    position: fixed; bottom: 84px; right: 22px; z-index: 90;
+    width: 360px; max-width: calc(100vw - 44px); height: 480px; max-height: calc(100vh - 130px);
+    background: #fff; border-radius: 16px; box-shadow: var(--shadow-md), 0 12px 40px rgba(0,0,0,0.18);
+    display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+  }
+  .chatbox-panel.open { display: flex; }
+  .chatbox-header {
+    background: var(--bedrock); color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chatbox-header .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.9rem; }
+  .chatbox-header .subtitle { font-size: 0.72rem; color: #9fb2cf; margin-top: 2px; }
+  .chatbox-close { background: none; border: none; color: #9fb2cf; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px; }
+  .chatbox-body { flex: 1; overflow-y: auto; padding: 14px 16px; background: #f8fafc; }
+  .chatbox-welcome { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .chatbox-answer { background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--middleware); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .chatbox-answer .cb-cat { font-family: "JetBrains Mono", monospace; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--middleware); font-weight: 600; }
+  .chatbox-answer .cb-title { font-weight: 600; font-size: 0.86rem; margin: 3px 0 5px; }
+  .chatbox-answer .cb-text { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .chatbox-related { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 12px 0 6px; }
+  .chatbox-result { display: block; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; text-decoration: none; }
+  .chatbox-result .cb-r-title { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
+  .chatbox-result .cb-r-cat { font-size: 0.7rem; color: var(--muted); }
+  .chatbox-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: #fff; }
+  .chatbox-input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.82rem; font-family: inherit; }
+  .chatbox-submit { background: var(--middleware); color: #fff; border: none; border-radius: 8px; padding: 0 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+
+  /* ---- floating contact widget (site-wide, mirrors the search chatbox) ---- */
+  .contact-toggle {
+    position: fixed; bottom: 22px; left: 22px; z-index: 90;
+    width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--mgmt), var(--rdk-blue)); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(14,159,110,0.4);
+  }
+  .contact-toggle svg { width: 22px; height: 22px; }
+  .contact-panel {
+    position: fixed; bottom: 84px; left: 22px; z-index: 90;
+    width: 340px; max-width: calc(100vw - 44px);
+    background: #fff; border-radius: 16px; box-shadow: var(--shadow-md), 0 12px 40px rgba(0,0,0,0.18);
+    display: none; flex-direction: column; overflow: hidden; border: 1px solid var(--border);
+  }
+  .contact-panel.open { display: flex; }
+  .contact-header { background: var(--bedrock); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .contact-header .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 0.9rem; }
+  .contact-header .subtitle { font-size: 0.72rem; color: #9fb2cf; margin-top: 2px; }
+  .contact-close { background: none; border: none; color: #9fb2cf; cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px; }
+  .contact-body { padding: 16px; }
+  .contact-field { margin-bottom: 12px; }
+  .contact-field label { display: block; font-size: 0.76rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .contact-field input, .contact-field textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px;
+    font-size: 0.84rem; font-family: inherit; resize: vertical;
+  }
+  .contact-submit {
+    width: 100%; background: var(--mgmt); color: #fff; border: none; border-radius: 8px;
+    padding: 10px; font-size: 0.86rem; font-weight: 600; cursor: pointer; margin-top: 4px;
+  }
+  .contact-submit:disabled { opacity: 0.6; cursor: default; }
+  .contact-status { font-size: 0.78rem; margin-top: 10px; text-align: center; }
+  .contact-status.ok { color: #0aa66e; }
+  .contact-status.err { color: #b91c1c; }
+  .contact-mailto { display: block; text-align: center; font-size: 0.76rem; color: var(--muted); margin-top: 10px; }
+</style>
+<title>Hardware Compatibility Spec — RDK-B Core Broadband</title>
+
+<style>
+  .hwcompat-summary { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 0.85rem; color: var(--muted); }
+  .hwcompat-summary strong { color: var(--ink); font-weight: 600; }
+  .hwc-block { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: #fff; }
+  .hwc-block-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .hwc-block-title { font-weight: 700; font-size: 0.85rem; color: var(--ink); margin-right: 2px; }
+  .hwc-block-meta { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+  .hwc-block-meta strong { color: var(--ink); font-weight: 600; }
+  .hwc-notes { font-size: 0.78rem; color: #9aa1ad; line-height: 1.55; margin: 8px 0 0; }
+</style>
+
+</head>
+<body>
+<div class="accent-bar"></div>
+<div class="topnav">
+  <div class="brand">
+    <img src="RDK-logo.png" alt="RDK-B Core Broadband logo" onerror="this.style.display='none'">
+  </div>
+  <nav>
+    <a class="" href="index.html">About Core RDK Broadband</a><a class="cta" href="components/">Core RDK Components ↗</a><div class="nav-group ">
+      <button type="button" class="nav-group-toggle ">Standards <span class="caret">&#9662;</span></button>
+      <div class="nav-dropdown"><div class="nav-dropdown-inner"><a class="" href="architecture-standards.html">Architecture Standards</a><a class="" href="industry-standards.html">Industry Conformance Standards</a><a class="" href="technical-governance.html">Development Standards</a></div></div>
+    </div><a class="" href="component-registry.html">Component Registry</a><div class="nav-group ">
+      <button type="button" class="nav-group-toggle ">North Bound APIs <span class="caret">&#9662;</span></button>
+      <div class="nav-dropdown"><div class="nav-dropdown-inner"><a class="" href="north-bound-specification.html">North Bound Specification</a><a class="" href="north-bound-apis.html">List of North Bound APIs</a></div></div>
+    </div><div class="nav-group ">
+      <button type="button" class="nav-group-toggle ">South Bound APIs <span class="caret">&#9662;</span></button>
+      <div class="nav-dropdown"><div class="nav-dropdown-inner"><a class="" href="south-bound-specification.html">South Bound Specification</a><a class="" href="south-bound-apis.html">List of South Bound APIs</a></div></div>
+    </div><a class="active" href="hardware-compatibility.html">Hardware Compatibility</a>
+  </nav>
+</div>
+<script>
+  // Click-to-toggle for touch devices; desktop still gets :hover/:focus-within
+  // from CSS for free. Closes other open groups and closes on outside click.
+  document.querySelectorAll('.nav-group-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const group = btn.closest('.nav-group');
+      const wasOpen = group.classList.contains('open');
+      document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+      if (!wasOpen) group.classList.add('open');
+    });
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+  });
+
+  // Belt-and-braces for mouse users: mirror hover with 'open' via JS too, with
+  // a short close delay, so the menu survives brief gaps/edge cases in pure
+  // CSS :hover tracking instead of relying on it alone.
+  let navCloseTimer = null;
+  document.querySelectorAll('.nav-group').forEach(group => {
+    group.addEventListener('mouseenter', () => {
+      clearTimeout(navCloseTimer);
+      document.querySelectorAll('.nav-group.open').forEach(g => { if (g !== group) g.classList.remove('open'); });
+      group.classList.add('open');
+    });
+    group.addEventListener('mouseleave', () => {
+      navCloseTimer = setTimeout(() => group.classList.remove('open'), 250);
+    });
+  });
+</script>
+<div class="page-main">
+
+
+<div class="hero" style="padding:48px 40px 40px;">
+  <div class="hero-flex">
+    <div class="hero-inner">
+      <span class="eyebrow">Hardware Compatibility</span>
+      <h1 style="font-size:2rem;">Hardware Compatibility Spec</h1>
+      <p class="lede">Minimum CPU, RAM, flash, and required peripheral hardware per RDK-B device profile, validated against a BPI-R4 (MT7988/Filogic) reference platform.</p>
+      
+    </div>
+    
+  </div>
+</div>
+
+
+<section class="tight-top">
+  <div class="callout">
+    <strong>Values are current design targets</strong>
+    <p>CPU/RAM/flash minimums and peripheral requirements below reflect design intent and reference
+    the existing RDK8 Broadband Release. Memory Footprint by Process is intentionally TBD for every
+    component &mdash; per-process RSS can only be measured once Core RDK Broadband is operationalized
+    on the reference platform. Fine-tuned, measured values will replace these targets as that
+    validation completes.</p>
+  </div>
+</section>
+
+<section class="tight-top">
+  <div class="section-head"><h2>Device Profile Coverage</h2>
+    <p>The RDK-B Component List 2026 defines seven device profiles. None are validated against an
+    operationalized Core RDK Broadband build in this revision; two have RDK8-based target values
+    available below.</p>
+  </div>
+  <table class="def-table"><thead><tr><th>Device Profile</th><th>Coverage in this Spec</th><th>Definition</th></tr></thead><tbody><tr><td>EthWAN WiFi Router</td><td>Defined — not covered in this revision</td><td>IPv4/IPv6 router with Ethernet WAN and Wi-Fi AP features. EasyMesh features are optional.</td></tr><tr><td>EXT EasyMesh</td><td>Defined — not covered in this revision</td><td>Wi-Fi extender device based on EasyMesh Agent technology; supports Wi-Fi AP fronthaul and Wi-Fi/Ethernet backhaul.</td></tr><tr><td>Modem / ONU</td><td>Defined — not covered in this revision</td><td>Managed or unmanaged bridge from a WAN access technology to an Ethernet LAN port(s); may provide WAN configuration and diagnostics data. Does not include routing or Wi-Fi AP features.</td></tr><tr><td>GW</td><td>Defined — not covered in this revision</td><td>IPv4/IPv6 router with one or more WAN access technologies and Wi-Fi AP features.</td></tr><tr><td>GW OpenSync</td><td>Defined — not covered in this revision</td><td>IPv4/IPv6 router with one or more WAN access technologies and OpenSync Mesh Wi-Fi features.</td></tr><tr><td>GW EasyMesh</td><td>Defined — not covered in this revision</td><td>IPv4/IPv6 router with one or more WAN access technologies and EasyMesh Wi-Fi controller + agent features.</td></tr><tr><td>EXT OpenSync</td><td>Defined — not covered in this revision</td><td>Wi-Fi extender device based on OpenSync technology; supports Wi-Fi AP fronthaul and Wi-Fi/Ethernet backhaul.</td></tr></tbody></table>
+</section>
+
+<section class="tight-top">
+  <div class="section-head"><h2>Minimum CPU, Memory, and Flash Storage (based on RDK8)</h2></div>
+  <table class="def-table"><thead><tr><th>Profile</th><th>CPU (min.)</th><th>Cores</th><th>RAM (min.)</th><th>Flash (min.)</th><th>RAM Used</th><th>Measured CPU</th><th>Reference Device</th></tr></thead><tbody><tr><td>EthWAN WiFi Router</td><td class="mono">arm64, ≥ 1.8 GHz</td><td>4 (single-cluster)</td><td>1024 MB</td><td>4096 MB</td><td class="mono">905.6 MB</td><td class="mono">3.57%</td><td>BPI-R4, MediaTek MT7988 (Filogic)</td></tr><tr><td>EXT EasyMesh</td><td class="mono">arm64, ≥ 1.8 GHz</td><td>4 (single-cluster)</td><td>1024 MB</td><td>4096 MB</td><td class="mono">582.0 MB</td><td class="mono">3.44%</td><td>BPI-R4, MediaTek MT7988 (Filogic)</td></tr></tbody></table>
+</section>
+
+
+<section class="tight-top">
+  <div class="section-head"><h2>Flash Details</h2>
+    <p>Why the flash floor is what it is, what every profile's layout must provide, and the
+    storage technologies this specification recognizes -- generic across all profiles.</p>
+  </div>
+  
+  <h3 style="font-size:0.98rem; margin:22px 0 8px;">Why 4 GB? Two banks, not one</h3>
+  <p style="color:var(--ink); font-size:0.9rem; line-height:1.55; margin:0 0 10px;">Flash minimums assume a dual-bank (A/B) layout for OTA, which requires roughly double the flash of an equivalent single-bank design (two full kernel + rootfs copies, not one). A safe firmware upgrade writes and verifies the complete new image into the passive slot before switching boot selection -- there is no reliable A/B upgrade path that shares space between active and standby images.</p>
+  <p style="color:var(--ink); font-size:0.86rem; line-height:1.55; margin:0 0 10px;">A/B banking applies to every OTA-relevant partition, not just RootFS -- Bootloader, Kernel/BootFS, and RootFS are all duplicated as full A-slot/B-slot pairs, each slot sized to the SAME capacity. If RootFS uses 500 MiB, the device needs capacity for TWO 500 MiB RootFS slots (1,000 MiB total for RootFS alone). Treating a single measured partition size as the full device flash requirement is the single most common flash-sizing error. The documented exception is NVRAM/persistent configuration, measured as a single shared partition rather than duplicated A/B -- configuration state doesn&#x27;t need a standby copy the way an executable firmware image does.</p>
+  <div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:8px; padding:12px 16px; margin-bottom:10px;">
+    <strong style="color:var(--ink); font-size:0.84rem;">Measured evidence:</strong>
+    <p style="color:var(--muted); font-size:0.82rem; line-height:1.5; margin:4px 0 0;">Two separate storage-analysis reports (one per profile) confirm the current A/B layout already allocates ~2,172 MiB before metadata, so a 2,048 MiB (2 GiB) part does not fit it. Both reports independently converge on the same recommendation: 2 GiB insufficient, 4 GiB technical minimum, 8 GiB recommended production capacity.</p>
+  </div>
+  <p style="color:var(--muted); font-size:0.82rem; line-height:1.5; margin:0 0 18px;">Single-bank designs use less flash but have no standby image to fall back to, and MUST implement an alternative recovery mechanism (a dedicated recovery partition or a field-service reflash procedure) to achieve comparable OTA safety. See Section 3.1.1, Storage Conformance Modes.</p>
+
+  <h3 style="font-size:0.98rem; margin:18px 0 8px;">Logical Partition Classes</h3>
+  <table class="def-table"><thead><tr><th>ID</th><th>Partition Class</th><th>Purpose</th><th>OTA Treatment</th><th>Owner</th></tr></thead><tbody><tr><td class="mono">FLC-001</td><td><strong>Bootloader</strong></td><td>U-Boot or equivalent first/second-stage bootloader. MUST be signature-verified as part of the secure boot chain (see PCH-015).</td><td>Platform-required. Bolt A/B (Section 3.7) form their own fallback pair, but the bootloader itself is not directly rewritten by the RDK-B OTA mechanism.</td><td>Vendor</td></tr><tr><td class="mono">FLC-002</td><td><strong>Kernel (A) / (B)</strong></td><td>Active and standby kernel images for A/B OTA fallback. MUST be signature-verified as a signed firmware image (see PCH-016).</td><td>Duplicated per slot; directly updated by OTA.</td><td>Core RDK‑B</td></tr><tr><td class="mono">FLC-003</td><td><strong>Rootfs (A) / (B)</strong></td><td>Active and standby root filesystem (ext4/squashfs/EROFS on eMMC, or UBI/UBIFS on SPI-NAND) containing Core RDK‑B components. MUST be signature-verified as a signed firmware image (see PCH-016).</td><td>Duplicated per slot; directly updated by OTA.</td><td>Core RDK‑B</td></tr><tr><td class="mono">FLC-004</td><td><strong>Persistent/Config</strong></td><td>PSM/TR‑181 persistent data store for customer-resettable configuration (Wi‑Fi SSID/password, LAN settings). Cleared by factory reset; distinct from Calibration/Factory Data (FLC-005), which is never cleared by factory reset.</td><td>Platform-required; preserved across update (not directly overwritten by OTA).</td><td>Core RDK‑B</td></tr><tr><td class="mono">FLC-005</td><td><strong>Calibration/Factory Data</strong></td><td>Radio calibration data, serial number; written at manufacturing. Non-resettable — NOT cleared by factory reset (see FLC-004 and STG-007). MAC address storage here is OEM/SoC-implementation-dependent — some implementations derive MAC from the stored serial number at boot rather than storing it separately (see Section 3.7.1).</td><td>Platform-required; preserved across update and factory reset; never modified by OTA.</td><td>Vendor</td></tr></tbody></table>
+  <h3 style="font-size:0.98rem; margin:22px 0 8px;">Storage Technologies</h3>
+  <table class="def-table"><thead><tr><th>Technology</th><th>What It Is</th><th>Managed By</th></tr></thead><tbody><tr><td><strong>eMMC</strong></td><td>NAND flash with an integrated controller presenting a standard block-device interface (like a small SSD).</td><td>Onboard controller handles wear-leveling/bad-block internally — OS sees a normal block device.</td></tr><tr><td><strong>UFS</strong></td><td>Successor to eMMC — same managed-NAND/block-interface model, higher throughput via a different physical/electrical interface.</td><td>Same as eMMC — onboard controller, block-device interface.</td></tr><tr><td><strong>SPI-NAND</strong></td><td>Raw NAND accessed over a simple SPI bus, with no onboard wear-leveling controller.</td><td>Wear-leveling and bad-block management handled by software (Linux MTD + UBI layer).</td></tr><tr><td><strong>NOR flash</strong></td><td>A distinct flash memory architecture from NAND — slower, byte-addressable, small capacity, capable of execute-in-place (XIP).</td><td>Usually no filesystem; used for raw boot code that must run before the full flash subsystem initializes.</td></tr></tbody></table>
+  <h3 style="font-size:0.98rem; margin:22px 0 8px;">Valid Filesystem Pairings</h3>
+  <table class="def-table"><thead><tr><th>Storage Type</th><th>Valid Filesystem(s)</th><th>Why</th></tr></thead><tbody><tr><td><strong>eMMC</strong></td><td>ext4, squashfs, EROFS</td><td>Block device — standard Linux filesystems apply directly.</td></tr><tr><td><strong>UFS</strong></td><td>ext4, squashfs, EROFS</td><td>Same as eMMC — block device.</td></tr><tr><td><strong>SPI-NAND</strong></td><td>UBI/UBIFS only</td><td>Requires an MTD/NAND target; UBI provides the wear-leveling/bad-block layer software-side. MUST NOT be paired with eMMC or UFS — both already have onboard wear-leveling.</td></tr></tbody></table>
+  
+  <div style="margin-top:18px;">
+    <strong style="color:var(--ink); font-size:0.9rem;">Partition-level layout (reference: BPI-R4 (MediaTek MT7988A/Filogic 880))</strong>
+    <p style="color:var(--muted); font-size:0.82rem; margin:4px 0 10px;">Confirmed via direct fdisk/proc evidence on the BPI-R4 reference device (production-style image, build rdk8-1.0.0_20260916). This is one device&#x27;s actual layout, not a mandate -- other compatible hardware may implement the logical partition classes above differently, as long as the A/B banking and capacity requirements are met.</p>
+    <table class="def-table"><thead><tr><th>#</th><th>Partition</th><th>Allocated</th><th>Filesystem</th>
+    <th>Used</th><th>Purpose</th></tr></thead><tbody><tr><td class="mono">p1</td><td><strong>bl2</strong></td><td>4 MiB</td><td>Raw boot image</td><td>N/A</td><td>BL2 A</td></tr><tr><td class="mono">p2</td><td><strong>fip</strong></td><td>2 MiB</td><td>Raw boot image</td><td>N/A</td><td>FIP A</td></tr><tr><td class="mono">p3</td><td><strong>boot_a</strong></td><td>16 MiB</td><td>VFAT</td><td>6.44 MiB (47%; FS cap 15.95 MiB)</td><td>Active BootFS</td></tr><tr><td class="mono">p4</td><td><strong>rootfs_a</strong></td><td>1,024 MiB</td><td>ext4</td><td>401 MiB</td><td>Active RootFS</td></tr><tr><td class="mono">p5</td><td><strong>bl2_b</strong></td><td>4 MiB</td><td>Raw boot image</td><td>N/A</td><td>BL2 B</td></tr><tr><td class="mono">p6</td><td><strong>fip_b</strong></td><td>2 MiB</td><td>Raw boot image</td><td>N/A</td><td>FIP B</td></tr><tr><td class="mono">p7</td><td><strong>boot_b</strong></td><td>16 MiB</td><td>VFAT</td><td>6.44 MiB (47%; FS cap 15.95 MiB)</td><td>Passive BootFS</td></tr><tr><td class="mono">p8</td><td><strong>rootfs_b</strong></td><td>1,024 MiB</td><td>ext4</td><td>0.02 MiB — effectively empty</td><td>Passive RootFS — allocated, not yet populated (upgrade target)</td></tr><tr><td class="mono">p9</td><td><strong>nvram</strong></td><td>16 MiB</td><td>ext4</td><td>4.67 MiB (37%; FS cap 13.74 MiB)</td><td>Shared NVRAM (no separate A/B)</td></tr><tr><td class="mono">p10</td><td><strong>crash_a</strong></td><td>7 MiB</td><td>ext4</td><td>0.01 MiB — effectively empty</td><td>Slot-A crash data</td></tr><tr><td class="mono">p11</td><td><strong>crash_b</strong></td><td>7 MiB</td><td>ext4</td><td>0.01 MiB — effectively empty</td><td>Slot-B crash data</td></tr><tr><td class="mono">p12</td><td><strong>reserved</strong></td><td>16 MiB</td><td>ext4</td><td>0.01 MiB — effectively empty</td><td>Reserved</td></tr><tr><td class="mono">p13</td><td><strong>dac</strong></td><td>32 MiB</td><td>ext4</td><td>0.01 MiB — effectively empty</td><td>DAC</td></tr></tbody></table>
+    <p style="color:var(--muted); font-size:0.8rem; margin:8px 0 0;"><strong>Total allocated:</strong> 2,172 MiB (approximately 2.12 GiB)</p>
+  </div>
+
+  
+  <details style="margin-top:22px; border:1px solid var(--border); border-radius:8px; padding:2px 16px;">
+    <summary style="cursor:pointer; padding:12px 0; font-weight:600; color:var(--ink); font-size:0.9rem;">
+      Generic RDKM reference design (53 entries, not device-specific) -- click to expand
+    </summary>
+    <p style="color:var(--muted); font-size:0.82rem; line-height:1.5; margin:0 0 12px;">The original RDKM reference design -- 53 allocation entries spanning the fuller RDK-B partition ecosystem across the broadband device portfolio (including profiles out of scope for this specification). These are range-based design allowances, not measured values, and several entries are SoC/OEM-confidential. BPI-R4&#x27;s actual confirmed layout (above) implements 13 of these as real partitions -- see Section 3.7 for how the two relate.</p>
+    <table class="def-table"><thead><tr><th>#</th><th>Partition Name</th><th>Purpose</th>
+    <th>Reference Allocation</th></tr></thead><tbody><tr><td class="mono">0</td><td>Bolt A</td><td>Bootloader (active)</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">1</td><td>Bolt B</td><td>Bootloader (standby)</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">2</td><td>Kernel A</td><td>Active kernel image</td><td>9 MB – 15 MB</td></tr><tr><td class="mono">3</td><td>Kernel B</td><td>Standby kernel image</td><td>9 MB – 15 MB</td></tr><tr><td class="mono">4</td><td>RDK-B Rootfs A</td><td>Active root filesystem</td><td>500 MB – 1 GB</td></tr><tr><td class="mono">5</td><td>RDK-B Rootfs B</td><td>Standby root filesystem</td><td>500 MB – 1 GB</td></tr><tr><td class="mono">6</td><td>Crash debug A</td><td>Crash/debug capture</td><td>20 MB – 30 MB</td></tr><tr><td class="mono">7</td><td>Crash debug B</td><td>Crash/debug capture</td><td>20 MB – 30 MB</td></tr><tr><td class="mono">8</td><td>Reserved A (remaining)</td><td>For future purpose</td><td>Remaining left flash</td></tr><tr><td class="mono">9</td><td>Reserved B (remaining)</td><td>For future purpose</td><td>Remaining left flash</td></tr><tr><td class="mono">10</td><td>DAC partition</td><td>New flash requirement for RDK‑B</td><td>New requirement — planning for upcoming devices; existing leftover memory reserved for a future device-class-specific use case.</td></tr><tr><td class="mono">11</td><td>Reserved</td><td>Not currently allocated</td><td>—</td></tr><tr><td class="mono">12</td><td>MAC Address A (under Bolt)</td><td>MAC address storage</td><td>up to 200 KB</td></tr><tr><td class="mono">13</td><td>MAC Address B (under Bolt)</td><td>MAC address storage</td><td>up to 200 KB</td></tr><tr><td class="mono">14</td><td>RDK-B NVRAM A</td><td>Persistent configuration</td><td>80 MB – 100 MB</td></tr><tr><td class="mono">15</td><td>RDK-B NVRAM B</td><td>Persistent configuration</td><td>80 MB – 100 MB</td></tr><tr><td class="mono">16</td><td>Linux Device Tree A</td><td>Device tree blob</td><td>256 KB – 512 KB</td></tr><tr><td class="mono">17</td><td>Linux Device Tree B</td><td>Device tree blob</td><td>256 KB – 512 KB</td></tr><tr><td class="mono">18</td><td>Root data A</td><td>Root data store</td><td>40 MB – 100 MB</td></tr><tr><td class="mono">19</td><td>Root data B</td><td>Root data store</td><td>40 MB – 100 MB</td></tr><tr><td class="mono">20</td><td>Bolt A NVRAM</td><td>Bootloader environment</td><td>up to 200 KB</td></tr><tr><td class="mono">21</td><td>Bolt B NVRAM</td><td>Bootloader environment</td><td>up to 200 KB</td></tr><tr><td class="mono">22</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr><tr><td class="mono">23</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr><tr><td class="mono">24</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">25</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">26</td><td>SoC/OEM specific</td><td>Confidential</td><td>9 MB – 20 MB</td></tr><tr><td class="mono">27</td><td>SoC/OEM specific</td><td>Confidential</td><td>9 MB – 20 MB</td></tr><tr><td class="mono">28</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">29</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">30</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">31</td><td>SoC/OEM specific</td><td>Confidential</td><td>2 MB max</td></tr><tr><td class="mono">32</td><td>SoC/OEM specific</td><td>Confidential</td><td>256 KB – 512 KB</td></tr><tr><td class="mono">33</td><td>SoC/OEM specific</td><td>Confidential</td><td>256 KB – 512 KB</td></tr><tr><td class="mono">34</td><td>SoC/OEM specific</td><td>Confidential</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">35</td><td>SoC/OEM specific</td><td>Confidential</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">36</td><td>SoC/OEM specific</td><td>Confidential</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">37</td><td>SoC/OEM specific</td><td>Confidential</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">38</td><td>SoC/OEM specific</td><td>Confidential</td><td>1 MB – 2 MB</td></tr><tr><td class="mono">39</td><td>SoC/OEM specific</td><td>Confidential</td><td>7 MB – 10 MB</td></tr><tr><td class="mono">40</td><td>SoC/OEM specific</td><td>Confidential</td><td>7 MB – 10 MB</td></tr><tr><td class="mono">41</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr><tr><td class="mono">42</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr><tr><td class="mono">43</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 300 KB</td></tr><tr><td class="mono">44</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 300 KB</td></tr><tr><td class="mono">45</td><td>SoC/OEM specific</td><td>Confidential</td><td>250 MB – 300 MB</td></tr><tr><td class="mono">46</td><td>SoC/OEM specific</td><td>Confidential</td><td>250 MB – 300 MB</td></tr><tr><td class="mono">47</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 3 MB</td></tr><tr><td class="mono">48</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 3 MB</td></tr><tr><td class="mono">49</td><td>SoC/OEM specific</td><td>Confidential</td><td>7 MB – 10 MB</td></tr><tr><td class="mono">50</td><td>SoC/OEM specific</td><td>Confidential</td><td>7 MB – 10 MB</td></tr><tr><td class="mono">51</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr><tr><td class="mono">52</td><td>SoC/OEM specific</td><td>Confidential</td><td>up to 200 KB</td></tr></tbody></table>
+  </details>
+
+</section>
+
+
+<section class="tight-top">
+  <div class="section-head"><h2>Profile Details (based on RDK8)</h2>
+    <p>Full CPU/memory/flash minimums and peripheral requirements, from the RDK8 Broadband Release,
+    for the two profiles with target data available.</p>
+  </div>
+  <div class="card" style="max-width:none; margin-bottom:20px;"><div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;"><h3 style="margin:0;">EthWAN WiFi Router</h3><span class="pill" style="background:#fef3c7;color:#92400e;border-radius:999px;">Partial</span><span style="font-size:0.78rem; color:var(--muted);">last validated 2026-09-17</span></div><div class="hwcompat-summary"><span><strong>CPU:</strong> arm64, ≥ 1.8 GHz, 4 cores (reference: Cortex-A73)</span><span><strong>RAM:</strong> 1024 MB</span><span><strong>Flash:</strong> 4096 MB</span><span><strong>Reference device:</strong> BPI-R4 (MediaTek MT7988 (Filogic))</span></div><div class="subhead" style="margin-top:18px;">Peripheral Requirements</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;"><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">WAN</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Primary internet uplink via Ethernet, minimum 1 Gbps. Cellular backup is optional for this profile; mandatory only for a Cellular Backup variant (not yet defined).</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Primary:</span> <span style="color:var(--ink);">Ethernet, 1 Gbps minimum</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Cellular backup (optional):</span> <span style="color:var(--ink);">M.2 (B-key) modem, USB bus interface, MBIM/QMI protocol, physical SIM</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Linux interface:</span> <span style="color:var(--ink);">wwan0</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Quectel EM05-G, validated in North America and APAC regions via wwan0 and USB RNDIS tethering</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Ethernet is the primary internet connection. Cellular failover and USB phone tethering are optional capabilities, not required for the base profile.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">LAN</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Ethernet ports for wired LAN devices.</p><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Ethernet ports for wired devices on the home network.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Wi-Fi</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">IEEE 802.11n/ac/ax/be support, subject to required bands and profile configuration.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Bands:</span> <span style="color:var(--ink);">2.4 GHz, 5 GHz, 6 GHz (optional)</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Security:</span> <span style="color:var(--ink);">WPA2, WPA3</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">MLO:</span> <span style="color:var(--ink);">Required where 6 GHz/802.11be is present</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Mesh:</span> <span style="color:var(--ink);">EasyMesh Controller functionality is required for the GW EasyMesh profile, and not required for this profile unless EasyMesh is enabled</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Wi-Fi 7 card (BE14) with antennas</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Wi-Fi access point for wireless devices. Supporting 802.11be does not by itself mean every band and legacy mode has been separately validated.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Bluetooth / IoT</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Radio supporting Bluetooth LE and IEEE 802.15.4 (Thread/Zigbee), for smart-home device connections and Matter commissioning.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Protocols:</span> <span style="color:var(--ink);">Bluetooth LE, Thread, Zigbee</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Silicon Labs EFR32xG24</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Simultaneous Bluetooth, Thread, and Zigbee operation has not been specifically validated as a coexistence scenario -- each protocol has been exercised individually (Matter over Wi-Fi validates the Wi-Fi interface, not this radio; Matter over Thread validates the Thread Border Router and 802.15.4; BLE commissioning and Zigbee pairing validate the radio directly).</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Packet Processor</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Hardware-accelerated forwarding (routing/NAT) is required to meet the profile&#x27;s throughput requirements without relying on the CPU for per-packet processing.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: built into the SoC (MediaTek MT7988A)</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Speeds up routing and NAT by handling it in hardware instead of software.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">AI / NPU</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not required for this profile.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: Not present on BPI-R4</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A future board revision could add one as a plug-in module, for on-device AI features.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">USB</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">General-purpose USB port, optional.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: used for the cellular backup modem&#x27;s USB bus interface, Android phone tethering, and IoT test devices</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A general-purpose USB port.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">SIM Card Slot</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Required only if cellular backup is implemented.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical SIM slot for the Quectel EM05-G</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Holds the SIM for the cellular backup modem, where present.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Storage</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Non-volatile storage for firmware and configuration, sized to the profile&#x27;s flash minimum, with A/B update support and a recovery path.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Supported media:</span> <span style="color:var(--ink);">eMMC, SPI-NAND</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">A/B update support:</span> <span style="color:var(--ink);">Required</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Recovery partition:</span> <span style="color:var(--ink);">Required</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Bootloader rollback support:</span> <span style="color:var(--ink);">Required</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: eMMC / SPI-NAND, see Section 3.7 for measured partition sizes</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Media type and A/B update capability are separate requirements -- a device could use different flash media and still meet the A/B/recovery requirement independently.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">SD Card Slot</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not a production requirement.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: SD card slot, used for development, recovery, and validation on the reference platform</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Optional; a reference-board capability, not something every compatible device needs.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Media Tuner</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Integrated DOCSIS, DSL, PON, or media-tuner hardware is not required for this profile.</p><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Fiber can still reach this profile through an external ONT and Ethernet WAN -- this profile just doesn&#x27;t require integrated PON/tuner hardware itself.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Debug Port</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">UART is required during bring-up; production exposure is vendor/security-policy dependent. JTAG is optional for development and must be disabled or access-controlled in production where security requirements apply.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">UART:</span> <span style="color:var(--ink);">Required during bring-up</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">JTAG:</span> <span style="color:var(--ink);">Optional for development; access-controlled in production</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: serial console, JTAG header</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Debug access for development; production posture depends on the vendor&#x27;s security policy.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">WPS Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Optional unless required by the product profile. If implemented, the button event must be accessible to platform software and comply with the applicable Wi-Fi security policy.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical WPS button</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A physical button for quick Wi-Fi setup, where implemented.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Reset Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">If implemented, short-press and long-press behavior, factory-reset trigger, whether credentials/persistent settings are erased, and recovery behavior if pressed during boot must all be defined and testable.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Short press:</span> <span style="color:var(--ink);">TBD -- vendor-defined</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Long press (factory reset):</span> <span style="color:var(--ink);">TBD -- duration and erasure scope vendor-defined</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Pressed during boot:</span> <span style="color:var(--ink);">TBD -- recovery behavior vendor-defined</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical reset button</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Exact press-duration thresholds and erasure scope are not yet specified for this profile.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Power Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Optional; reference-platform dependent. Many gateways use an external power adapter with no software-visible power switch.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical power switch</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Not universally required.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Thermal / Cooling</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">The platform shall remain within its specified operating temperature and performance limits under sustained maximum workload. Cooling may be passive or active.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: active fan</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">This is a thermal performance requirement, not a mandate for a specific cooling method.</p></div></div><div class="subhead" style="margin-top:18px;">Memory Footprint by Process</div><div class="hwcompat-summary" style="margin:0 0 10px;"><span><strong>Reference device:</strong> BPI-R4 (MediaTek MT7988A/Filogic 880), combined EthWAN + EasyMesh Controller/Agent build (production-style image, no dev tooling)</span> <span><strong>Last measured:</strong> 2026-09-17</span> <span><strong>Total RSS:</strong> 1053.06 MB</span></div><table class="def-table"><thead><tr><th>Process</th><th>RSS</th></tr></thead><tbody><tr><td>onewifi_em_ctrl</td><td class="mono" style="color:var(--muted);">271.9 MB</td></tr><tr><td>onewifi_em_agent</td><td class="mono" style="color:var(--muted);">215.4 MB</td></tr><tr><td>OneWifi</td><td class="mono" style="color:var(--muted);">74.3 MB</td></tr><tr><td>mariadbd</td><td class="mono" style="color:var(--muted);">61.0 MB</td></tr><tr><td>asterisk</td><td class="mono" style="color:var(--muted);">30.6 MB</td></tr><tr><td>onewifi_em_cli</td><td class="mono" style="color:var(--muted);">24.6 MB</td></tr><tr><td>CcspPandMSsp</td><td class="mono" style="color:var(--muted);">17.9 MB</td></tr><tr><td>mdnsd</td><td class="mono" style="color:var(--muted);">13.2 MB</td></tr><tr><td>snmp_subagent</td><td class="mono" style="color:var(--muted);">11.8 MB</td></tr><tr><td>telemetry2_0</td><td class="mono" style="color:var(--muted);">11.2 MB</td></tr><tr><td>parodus</td><td class="mono" style="color:var(--muted);">11.1 MB</td></tr><tr><td>CcspTr069PaSsp</td><td class="mono" style="color:var(--muted);">10.7 MB</td></tr><tr><td>obuspa</td><td class="mono" style="color:var(--muted);">10.4 MB</td></tr><tr><td>cellularmanager</td><td class="mono" style="color:var(--muted);">9.9 MB</td></tr><tr><td>ModemManager</td><td class="mono" style="color:var(--muted);">9.7 MB</td></tr><tr><td>snmpd</td><td class="mono" style="color:var(--muted);">9.6 MB</td></tr><tr><td>webconfig</td><td class="mono" style="color:var(--muted);">9.4 MB</td></tr><tr><td>PsmSsp</td><td class="mono" style="color:var(--muted);">9.4 MB</td></tr><tr><td>telcovoice_manager</td><td class="mono" style="color:var(--muted);">9.1 MB</td></tr><tr><td>CcspTandDSsp</td><td class="mono" style="color:var(--muted);">9.0 MB</td></tr><tr><td>systemd</td><td class="mono" style="color:var(--muted);">8.8 MB</td></tr><tr><td>CcspXdnsSsp</td><td class="mono" style="color:var(--muted);">8.5 MB</td></tr><tr><td>CcspEthAgent</td><td class="mono" style="color:var(--muted);">7.9 MB</td></tr><tr><td>CcspLMLite</td><td class="mono" style="color:var(--muted);">7.7 MB</td></tr><tr><td>systemd-journald</td><td class="mono" style="color:var(--muted);">7.7 MB</td></tr><tr><td>IGD</td><td class="mono" style="color:var(--muted);">7.7 MB</td></tr><tr><td>wanmanager</td><td class="mono" style="color:var(--muted);">7.5 MB</td></tr><tr><td>CcspDHCPMgr</td><td class="mono" style="color:var(--muted);">7.2 MB</td></tr><tr><td>webpa</td><td class="mono" style="color:var(--muted);">7.1 MB</td></tr><tr><td>gw_prov_utopia</td><td class="mono" style="color:var(--muted);">7.0 MB</td></tr><tr><td>CcspCrSsp</td><td class="mono" style="color:var(--muted);">7.0 MB</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">6.7 MB</td></tr><tr><td>remotedebugger</td><td class="mono" style="color:var(--muted);">6.7 MB</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">6.7 MB</td></tr><tr><td>DobbyDaemon</td><td class="mono" style="color:var(--muted);">6.7 MB</td></tr><tr><td>CcspAdvSecurity</td><td class="mono" style="color:var(--muted);">6.6 MB</td></tr><tr><td>VlanManager</td><td class="mono" style="color:var(--muted);">6.0 MB</td></tr><tr><td>fwupgrademanager</td><td class="mono" style="color:var(--muted);">5.9 MB</td></tr><tr><td>systemd-udevd</td><td class="mono" style="color:var(--muted);">5.3 MB</td></tr><tr><td>dsm</td><td class="mono" style="color:var(--muted);">5.0 MB</td></tr><tr><td>hal-voice-asterisk</td><td class="mono" style="color:var(--muted);">4.1 MB</td></tr><tr><td>rtrouted</td><td class="mono" style="color:var(--muted);">3.8 MB</td></tr><tr><td>rdkbLogMonitor.</td><td class="mono" style="color:var(--muted);">3.5 MB</td></tr><tr><td>selfheal_aggressive</td><td class="mono" style="color:var(--muted);">3.5 MB</td></tr><tr><td>dibbler-client</td><td class="mono" style="color:var(--muted);">3.3 MB</td></tr><tr><td>dbus-daemon</td><td class="mono" style="color:var(--muted);">2.9 MB</td></tr><tr><td>syseventd</td><td class="mono" style="color:var(--muted);">2.9 MB</td></tr><tr><td>self_heal_conne</td><td class="mono" style="color:var(--muted);">2.8 MB</td></tr><tr><td>zebra</td><td class="mono" style="color:var(--muted);">2.8 MB</td></tr><tr><td>resource_monito</td><td class="mono" style="color:var(--muted);">2.7 MB</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">2.6 MB</td></tr><tr><td>trigger</td><td class="mono" style="color:var(--muted);">2.5 MB</td></tr><tr><td>mysqld_safe</td><td class="mono" style="color:var(--muted);">2.5 MB</td></tr><tr><td>lighttpd</td><td class="mono" style="color:var(--muted);">2.4 MB</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">2.4 MB</td></tr><tr><td>ntp-data-collec</td><td class="mono" style="color:var(--muted);">2.3 MB</td></tr><tr><td>syseventd_fork_</td><td class="mono" style="color:var(--muted);">2.2 MB</td></tr><tr><td>login</td><td class="mono" style="color:var(--muted);">2.1 MB</td></tr><tr><td>ntpd</td><td class="mono" style="color:var(--muted);">2.0 MB</td></tr><tr><td>rbus_session_mg</td><td class="mono" style="color:var(--muted);">2.0 MB</td></tr><tr><td>netlink-button-</td><td class="mono" style="color:var(--muted);">1.9 MB</td></tr><tr><td>crond</td><td class="mono" style="color:var(--muted);">1.9 MB</td></tr><tr><td>dnsmasq</td><td class="mono" style="color:var(--muted);">1.8 MB</td></tr><tr><td>nfq_handler</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>klogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>dropbear</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>syslogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>syslogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>klogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>udhcpc</td><td class="mono" style="color:var(--muted);">1.6 MB</td></tr><tr><td>igmpproxy</td><td class="mono" style="color:var(--muted);">1.4 MB</td></tr><tr><td>rdisc</td><td class="mono" style="color:var(--muted);">1.3 MB</td></tr><tr><td>ninfod</td><td class="mono" style="color:var(--muted);">1.2 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr></tbody></table><p class="hwc-notes" style="margin-top:10px;">Full RSS capture, 79 processes with nonzero VmRSS (captured via /proc/&lt;pid&gt;/status on the live device; the capture script&#x27;s own process is excluded from this list). System-level used memory (MemTotal - MemAvailable, per Section 3.5 MEM-006 guidance) is 905.6 MiB — up from 573-631 MiB in earlier snapshots, tracking the onewifi_em_ctrl/onewifi_em_agent growth below. totalRssMB (1053.06) is the GROSS sum of listed processes and double-counts shared pages across processes; it does not equal the 905.6 MiB system-level figure. This capture shows no netdata, ollama, or apps.plugin — the earlier capture&#x27;s dev-only tooling — confirming this is a cleaner, more production-representative image than the original baseline. mariadbd is still present (still not normative for either in-scope profile). 
+
+Three-point growth history for the two flagged processes, in chronological order: onewifi_em_ctrl 118.7 MiB → 236.9 MiB → 271.9 MiB (this capture); onewifi_em_agent 21.0 MiB → 64.2 MiB → 215.4 MiB (this capture), the last point now over 10x its original value and larger than OneWifi itself. Three consecutive increases is materially stronger evidence toward a genuine leak than the earlier two-point &#x27;growth vs. leak, undistinguished&#x27; framing — this has not been reclassified as a confirmed leak, since exact device uptime at each capture is not recorded and the formal 72-hour soak test (MEM-008 criterion) still has not been run, but this pattern warrants prioritizing that soak test. 
+
+A handful of process names could not be independently de-truncated from this capture&#x27;s 15-character-limited /proc/&lt;pid&gt;/status Name field and are recorded as truncated: rdkbLogMonitor. (likely rdkbLogMonitor.sh), self_heal_conne, resource_monito, ntp-data-collec, syseventd_fork_, netlink-button-. Names confirmed against the earlier full-name capture (onewifi_em_agent, telcovoice_manager, systemd-journald, fwupgrademanager, hal-voice-asterisk, selfheal_aggressive) have been corrected to their full spelling here.</p><div class="subhead" style="margin-top:18px;">CPU Utilization by Process</div><div class="hwcompat-summary" style="margin:0 0 10px;"><span><strong>Reference device:</strong> BPI-R4 (MediaTek MT7988A/Filogic 880), combined EthWAN + EasyMesh Controller/Agent build (production-style image)</span> <span><strong>Condition:</strong> 60-second aggregate and per-process /proc/stat and /proc/&lt;pid&gt;/stat time-delta sample; all 4 cores online at governor default; light real-world background activity (OneWifi, snmpd, and napi/phy0 Wi-Fi softirq threads all show measurable, nonzero activity, indicating some radio activity during the window) but no controlled client/traffic load applied. Not a controlled loaded-workload test.</span> <span><strong>Last measured:</strong> 2026-09-17</span> <span><strong>Total CPU:</strong> 3.57%</span></div><table class="def-table"><thead><tr><th>Process</th><th>CPU</th></tr></thead><tbody><tr><td>OneWifi</td><td class="mono" style="color:var(--muted);">0.6%</td></tr><tr><td>snmpd</td><td class="mono" style="color:var(--muted);">0.2%</td></tr><tr><td>napi/phy0-15</td><td class="mono" style="color:var(--muted);">0.2%</td></tr><tr><td>netlink-button-</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>asterisk</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspPandMSsp</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>PsmSsp</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>rtrouted</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspTr069PaSsp</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-14</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspTandDSsp</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>syseventd</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>self_heal_conne</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>cellularmanager</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>wanmanager</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>onewifi_em_agent</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>systemd-journald</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>onewifi_em_ctrl</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>IGD</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspLMLite</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-17</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-16</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>systemd</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>parodus</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>webpa</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>obuspa</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>dibbler-client</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspXdnsSsp</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>crond</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspDHCPMgr</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>VlanManager</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>telcovoice_manager</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspEthAgent</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>DobbyDaemon</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>hal-voice-asterisk</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>CcspAdvSecurity</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>mt76-tx phy0</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td style="color:var(--muted);font-style:italic;">Others (below reporting threshold)</td><td class="mono" style="color:var(--muted);">2.0%</td></tr></tbody></table><p class="hwc-notes" style="margin-top:10px;">First real per-process CPU breakdown captured for this profile (prior captures had only the aggregate figure). Per-process percentages are normalized to % of total system capacity across all 4 cores, matching the aggregate figure&#x27;s own normalization — NOT % of a single core. (An earlier version of this capture&#x27;s tooling computed per-process percentages against one core only, which does not sum consistently against a multi-core aggregate; that has been corrected here.) othersCpuPercent (2.0%) covers kernel worker threads (kworker/*, ~0.16% of that) plus many near-idle kernel/IRQ threads each individually below measurable resolution at this sample rate. OneWifi is the largest single consumer at 0.55% (of total system capacity); onewifi_em_ctrl and onewifi_em_agent — despite their large and growing memory footprint (see memory-footprint companion file) — show minimal CPU activity here (0.01% each), consistent with idle/light-load conditions rather than active mesh operation. This remains an idle/light-load result; a loaded sample (EasyMesh formed, active Wi-Fi clients, sustained WAN throughput) has not yet been collected, and the profile&#x27;s assumed hardware NAT/flow offload capability (see Section 3, CA-007) has not been confirmed or refuted by this measurement either way.</p><div class="subhead" style="margin-top:18px;">Regional Applicability</div><div class="hwc-block" style="margin-bottom:10px;"><div class="hwc-block-head"><span class="hwc-block-title">North America (US)</span><span style="font-size:0.74rem; color:var(--muted);">FCC</span></div><div style="font-size:0.85rem; color:var(--muted); line-height:1.7; margin-bottom:8px;"><div><strong>2.4 GHz:</strong> Supported</div><div><strong>5 GHz:</strong> Supported, DFS required</div><div><strong>6 GHz:</strong> Supported, LPI</div></div><table class="def-table" style="font-size:0.85rem; margin-bottom:8px;"><thead><tr><th>Scheme</th><th>Status</th><th>Certificate</th></tr></thead><tbody><tr><td>FCC</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not tested</span></td><td class="mono" style="color:var(--muted);">—</td></tr></tbody></table><p class="hwc-notes" style="margin:0;">Starter regional file, US only. Illustrates the schema per Hardware Compatibility Specification Section 9.5; no radio configuration or compliance status below has been tested or certified. Other regions (Section 9.6) have not yet been profiled for this profile.</p></div><div style="font-weight:600; font-size:0.85rem; margin:14px 0 6px;">Planned Regional Coverage</div><table class="def-table" style="font-size:0.85rem;"><thead><tr><th>Region</th><th>Primary Regulatory Scheme(s)</th><th>Status</th></tr></thead><tbody><tr><td>North America (US)</td><td style="color:var(--muted);">FCC (Part 15, equipment authorization)</td><td><span style="display:inline-block;background:#dbeafe;color:#1e40af;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">See detail above</span></td></tr><tr><td>Canada</td><td style="color:var(--muted);">ISED, ICES</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>European Union / EEA</td><td style="color:var(--muted);">RED, CE marking, RoHS, REACH, WEEE</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>United Kingdom</td><td style="color:var(--muted);">UK Radio Equipment Regulations, UKCA, PSTI</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>India</td><td style="color:var(--muted);">TEC/MTCTE, WPC ETA, BIS</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Japan</td><td style="color:var(--muted);">Radio Law / TELEC, JATE, VCCI, PSE</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>South Korea</td><td style="color:var(--muted);">KC certification</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Australia / New Zealand</td><td style="color:var(--muted);">RCM, ACMA</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Brazil</td><td style="color:var(--muted);">ANATEL</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Other operator-selected markets</td><td style="color:var(--muted);">Per operator requirement</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr></tbody></table></div><div class="card" style="max-width:none; margin-bottom:20px;"><div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;"><h3 style="margin:0;">EXT EasyMesh</h3><span class="pill" style="background:#fef3c7;color:#92400e;border-radius:999px;">Partial</span><span style="font-size:0.78rem; color:var(--muted);">last validated 2026-09-17</span></div><div class="hwcompat-summary"><span><strong>CPU:</strong> arm64, ≥ 1.8 GHz, 4 cores (reference: Cortex-A73)</span><span><strong>RAM:</strong> 1024 MB</span><span><strong>Flash:</strong> 4096 MB</span><span><strong>Reference device:</strong> BPI-R4 (MediaTek MT7988 (Filogic))</span></div><div class="subhead" style="margin-top:18px;">Peripheral Requirements</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;"><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">WAN</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Dedicated service-provider WAN interface: Not required. Internet connectivity is obtained through wireless or Ethernet backhaul to the gateway.</p><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">An extender doesn&#x27;t need its own internet connection -- it reaches the internet through the gateway, over its mesh backhaul link.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">LAN</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Ethernet port optional; when present, usable as a wired backhaul link to the gateway instead of Wi-Fi.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Ethernet port</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A wired backhaul option, when available.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Wi-Fi</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">IEEE 802.11n/ac/ax/be support, subject to required bands and profile configuration.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Bands:</span> <span style="color:var(--ink);">2.4 GHz, 5 GHz, 6 GHz (optional)</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Security:</span> <span style="color:var(--ink);">WPA2, WPA3</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">MLO:</span> <span style="color:var(--ink);">Required where 6 GHz/802.11be is present</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Mesh:</span> <span style="color:var(--ink);">EasyMesh Agent functionality is required for this profile</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Wi-Fi 7 card (BE14) with antennas</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Wi-Fi access point for wireless devices, also used for the wireless mesh backhaul link back to the gateway.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Bluetooth / IoT</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Radio supporting Bluetooth LE and IEEE 802.15.4 (Thread/Zigbee), for smart-home device connections and Matter commissioning.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Protocols:</span> <span style="color:var(--ink);">Bluetooth LE, Thread, Zigbee</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: Silicon Labs EFR32xG24</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Simultaneous Bluetooth, Thread, and Zigbee operation has not been specifically validated as a coexistence scenario. Same component as the gateway profile.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Packet Processor</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">NAT acceleration is not required for a bridge-mode extender. Hardware forwarding acceleration may be used when supported by the platform, for bridged forwarding, VLAN handling, or other datapath operations.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: built into the SoC (MediaTek MT7988A)</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">An extender doesn&#x27;t NAT traffic, but the same silicon may still accelerate bridged forwarding where the platform supports it.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">AI / NPU</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not required for this profile.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: Not present on BPI-R4</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A future board revision could add one as a plug-in module, for on-device AI features.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">USB</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">General-purpose USB port, optional.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: used for IoT test devices</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A general-purpose USB port.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">SIM Card Slot</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not required -- this profile has no WAN/cellular capability.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical SIM slot present on the board, unused by this profile</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Present on the shared reference board, not used in this profile&#x27;s firmware.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Storage</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Non-volatile storage for firmware and configuration, sized to the profile&#x27;s flash minimum, with A/B update support and a recovery path.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Supported media:</span> <span style="color:var(--ink);">eMMC, SPI-NAND</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">A/B update support:</span> <span style="color:var(--ink);">Required</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Recovery partition:</span> <span style="color:var(--ink);">Required</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Bootloader rollback support:</span> <span style="color:var(--ink);">Required</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: eMMC / SPI-NAND, see Section 3.7 for measured partition sizes</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Media type and A/B update capability are separate requirements.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">SD Card Slot</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not a production requirement.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: SD card slot, used for development, recovery, and validation on the reference platform</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Optional; a reference-board capability.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Media Tuner</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Not required for this profile.</p><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">An extender has no WAN or voice functions.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Debug Port</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">UART is required during bring-up; production exposure is vendor/security-policy dependent. JTAG is optional for development and must be disabled or access-controlled in production where security requirements apply.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">UART:</span> <span style="color:var(--ink);">Required during bring-up</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">JTAG:</span> <span style="color:var(--ink);">Optional for development; access-controlled in production</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: serial console, JTAG header</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Debug access for development.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">WPS Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Optional unless required by the product profile. If implemented, the button event must be accessible to platform software and comply with the applicable Wi-Fi security policy.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical WPS button</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A physical button for quick Wi-Fi setup, where implemented.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Reset Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">If implemented, short-press and long-press behavior, factory-reset trigger, whether credentials/persistent settings are erased, and recovery behavior if pressed during boot must all be defined and testable.</p><div style="margin-bottom:10px;"><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Short press:</span> <span style="color:var(--ink);">TBD -- vendor-defined</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Long press (factory reset):</span> <span style="color:var(--ink);">TBD -- duration and erasure scope vendor-defined</span></div><div style="font-size:0.86rem; line-height:1.5; margin-bottom:4px;"><span style="color:var(--muted);">Pressed during boot:</span> <span style="color:var(--ink);">TBD -- recovery behavior vendor-defined</span></div></div><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical reset button</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Exact press-duration thresholds and erasure scope are not yet specified for this profile.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Power Button</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">Optional; reference-platform dependent.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: physical power switch</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">Not universally required.</p></div><div style="background:var(--card-bg); border:1px solid var(--border); border-left:3px solid var(--middleware); border-radius:10px; padding:16px 18px; box-shadow:var(--shadow-sm);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;"><span style="font-weight:700; font-size:0.98rem; color:var(--ink);">Thermal / Cooling</span></div><p style="color:var(--ink); font-size:0.9rem; line-height:1.5; margin:0 0 10px;">The platform shall remain within its specified operating temperature and performance limits under sustained maximum workload. Cooling may be passive or active.</p><div style="display:inline-block; background:var(--cloud-bg); color:var(--cloud-fg); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 9px; margin-bottom:10px;">Reference: BPI-R4: active fan</div><br><p style="color:var(--muted); font-size:0.78rem; line-height:1.5; margin:0;">A thermal performance requirement, not a mandate for a specific cooling method.</p></div></div><div class="subhead" style="margin-top:18px;">Memory Footprint by Process</div><div class="hwcompat-summary" style="margin:0 0 10px;"><span><strong>Reference device:</strong> Filogic tri-band Wi-Fi 7 EasyMesh extender (ARM64)</span> <span><strong>Last measured:</strong> 2026-09-17</span> <span><strong>Total RSS:</strong> 524.08 MB</span></div><table class="def-table"><thead><tr><th>Process</th><th>RSS</th></tr></thead><tbody><tr><td>onewifi_em_agent</td><td class="mono" style="color:var(--muted);">363.7 MB</td></tr><tr><td>OneWifi</td><td class="mono" style="color:var(--muted);">54.0 MB</td></tr><tr><td>snmpd</td><td class="mono" style="color:var(--muted);">9.1 MB</td></tr><tr><td>telemetry2_0</td><td class="mono" style="color:var(--muted);">8.9 MB</td></tr><tr><td>systemd</td><td class="mono" style="color:var(--muted);">8.1 MB</td></tr><tr><td>systemd-journal</td><td class="mono" style="color:var(--muted);">8.0 MB</td></tr><tr><td>gw_prov_utopia</td><td class="mono" style="color:var(--muted);">7.0 MB</td></tr><tr><td>CcspCrSsp</td><td class="mono" style="color:var(--muted);">6.6 MB</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">6.4 MB</td></tr><tr><td>systemd-udevd</td><td class="mono" style="color:var(--muted);">4.8 MB</td></tr><tr><td>rdkbLogMonitor.</td><td class="mono" style="color:var(--muted);">3.2 MB</td></tr><tr><td>dbus-daemon</td><td class="mono" style="color:var(--muted);">2.8 MB</td></tr><tr><td>syseventd</td><td class="mono" style="color:var(--muted);">2.8 MB</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">2.5 MB</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">2.4 MB</td></tr><tr><td>ntp-data-collec</td><td class="mono" style="color:var(--muted);">2.3 MB</td></tr><tr><td>rtrouted</td><td class="mono" style="color:var(--muted);">2.3 MB</td></tr><tr><td>GwProvCheck.sh</td><td class="mono" style="color:var(--muted);">2.3 MB</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">2.3 MB</td></tr><tr><td>syseventd_fork_</td><td class="mono" style="color:var(--muted);">2.2 MB</td></tr><tr><td>login</td><td class="mono" style="color:var(--muted);">2.1 MB</td></tr><tr><td>rbus_session_mg</td><td class="mono" style="color:var(--muted);">2.0 MB</td></tr><tr><td>ntpd</td><td class="mono" style="color:var(--muted);">2.0 MB</td></tr><tr><td>crond</td><td class="mono" style="color:var(--muted);">1.9 MB</td></tr><tr><td>dropbear</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>klogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>klogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>syslogd</td><td class="mono" style="color:var(--muted);">1.7 MB</td></tr><tr><td>syslogd</td><td class="mono" style="color:var(--muted);">1.6 MB</td></tr><tr><td>rdisc</td><td class="mono" style="color:var(--muted);">1.3 MB</td></tr><tr><td>ninfod</td><td class="mono" style="color:var(--muted);">1.2 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr><tr><td>sleep</td><td class="mono" style="color:var(--muted);">1.1 MB</td></tr></tbody></table><p class="hwc-notes" style="margin-top:10px;">Full RSS capture, 34 processes with nonzero VmRSS (captured via /proc/&lt;pid&gt;/status on the live device; the capture script&#x27;s own process is excluded from this list). System-level used memory (MemTotal - MemAvailable, per Section 3.5 MEM-006 guidance) is 582.0 MiB — up sharply from the 172-176 MiB range in earlier snapshots. totalRssMB (524.08) is the GROSS sum of listed processes and double-counts shared pages; it does not equal the 582.0 MiB system-level figure. 
+
+This capture surfaces a severe growth finding: onewifi_em_agent, previously measured at 20.24 MiB (the earlier full-process capture), is now 363.7 MiB — an approximately 18x increase, and by far the dominant contributor to the profile&#x27;s memory use (exceeding OneWifi&#x27;s own 54.0 MiB by nearly 7x). No prior capture exists between these two data points, so the growth curve shape (steady vs. sudden) is unknown; unlike the gateway&#x27;s three-point onewifi_em_ctrl/onewifi_em_agent history, this is only a two-point comparison, but the magnitude here is substantially larger than the gateway&#x27;s own onewifi_em_agent growth. This is the single strongest signal yet toward a genuine memory leak in the EasyMesh agent component (present on both profiles) rather than legitimate mesh-state growth, and materially increases the priority of running the formal 72-hour soak test (MEM-008 criterion) before this profile&#x27;s RAM floor can be considered validated. Extender-specific note: this profile runs onewifi_em_agent only (no onewifi_em_ctrl, which is gateway/controller-only), so this single process is the entire EasyMesh agent footprint for this device.</p><div class="subhead" style="margin-top:18px;">CPU Utilization by Process</div><div class="hwcompat-summary" style="margin:0 0 10px;"><span><strong>Reference device:</strong> Filogic tri-band Wi-Fi 7 EasyMesh extender (ARM64)</span> <span><strong>Condition:</strong> 60-second aggregate and per-process /proc/stat and /proc/&lt;pid&gt;/stat time-delta sample; all 4 cores online; light real-world background activity (OneWifi, snmpd, and napi/phy0 Wi-Fi softirq threads all show measurable, nonzero activity) but no controlled client/traffic load applied. Not a controlled multi-client or steering-load test.</span> <span><strong>Last measured:</strong> 2026-09-17</span> <span><strong>Total CPU:</strong> 3.44%</span></div><table class="def-table"><thead><tr><th>Process</th><th>CPU</th></tr></thead><tbody><tr><td>OneWifi</td><td class="mono" style="color:var(--muted);">0.7%</td></tr><tr><td>napi/phy0-15</td><td class="mono" style="color:var(--muted);">0.2%</td></tr><tr><td>snmpd</td><td class="mono" style="color:var(--muted);">0.2%</td></tr><tr><td>systemd</td><td class="mono" style="color:var(--muted);">0.2%</td></tr><tr><td>systemd-journal</td><td class="mono" style="color:var(--muted);">0.1%</td></tr><tr><td>ieee1905</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-14</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>onewifi_em_agent</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>rtrouted</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-17</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>napi/phy0-16</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>ntpd</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>syseventd</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>rdkbLogMonitor.</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>rdisc</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>sh</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>syslogd</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td>mt76-tx phy0</td><td class="mono" style="color:var(--muted);">0.0%</td></tr><tr><td style="color:var(--muted);font-style:italic;">Others (below reporting threshold)</td><td class="mono" style="color:var(--muted);">1.9%</td></tr></tbody></table><p class="hwc-notes" style="margin-top:10px;">First real per-process CPU breakdown captured for this profile (prior captures had only the aggregate figure). Per-process percentages are normalized to % of total system capacity across all 4 cores, matching the aggregate figure&#x27;s own normalization — NOT % of a single core, consistent with the same correction applied to the EthWAN WiFi Router companion file. othersCpuPercent (1.92%) covers kernel worker/softirq threads plus many near-idle kernel/IRQ threads individually below measurable resolution at this sample rate. OneWifi is the largest single consumer at 0.66% (of total system capacity); onewifi_em_agent — despite its extreme and growing memory footprint (see memory-footprint companion file, ~364 MiB) — shows minimal CPU activity here (0.01%), consistent with idle/light-load conditions rather than active mesh operation; this is notable given the process&#x27;s memory size and worth re-checking once the memory growth is better understood. This remains an idle/light-load result; a loaded sample (active client traffic, steering) has not yet been collected.</p><div class="subhead" style="margin-top:18px;">Regional Applicability</div><div class="hwc-block" style="margin-bottom:10px;"><div class="hwc-block-head"><span class="hwc-block-title">North America (US)</span><span style="font-size:0.74rem; color:var(--muted);">FCC</span></div><div style="font-size:0.85rem; color:var(--muted); line-height:1.7; margin-bottom:8px;"><div><strong>2.4 GHz:</strong> Supported</div><div><strong>5 GHz:</strong> Supported, DFS required</div><div><strong>6 GHz:</strong> Supported, LPI</div></div><table class="def-table" style="font-size:0.85rem; margin-bottom:8px;"><thead><tr><th>Scheme</th><th>Status</th><th>Certificate</th></tr></thead><tbody><tr><td>FCC</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not tested</span></td><td class="mono" style="color:var(--muted);">—</td></tr></tbody></table><p class="hwc-notes" style="margin:0;">Starter regional file, US only. Illustrates the schema per Hardware Compatibility Specification Section 9.5; no radio configuration or compliance status below has been tested or certified. Other regions (Section 9.6) have not yet been profiled for this profile.</p></div><div style="font-weight:600; font-size:0.85rem; margin:14px 0 6px;">Planned Regional Coverage</div><table class="def-table" style="font-size:0.85rem;"><thead><tr><th>Region</th><th>Primary Regulatory Scheme(s)</th><th>Status</th></tr></thead><tbody><tr><td>North America (US)</td><td style="color:var(--muted);">FCC (Part 15, equipment authorization)</td><td><span style="display:inline-block;background:#dbeafe;color:#1e40af;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">See detail above</span></td></tr><tr><td>Canada</td><td style="color:var(--muted);">ISED, ICES</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>European Union / EEA</td><td style="color:var(--muted);">RED, CE marking, RoHS, REACH, WEEE</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>United Kingdom</td><td style="color:var(--muted);">UK Radio Equipment Regulations, UKCA, PSTI</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>India</td><td style="color:var(--muted);">TEC/MTCTE, WPC ETA, BIS</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Japan</td><td style="color:var(--muted);">Radio Law / TELEC, JATE, VCCI, PSE</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>South Korea</td><td style="color:var(--muted);">KC certification</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Australia / New Zealand</td><td style="color:var(--muted);">RCM, ACMA</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Brazil</td><td style="color:var(--muted);">ANATEL</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr><tr><td>Other operator-selected markets</td><td style="color:var(--muted);">Per operator requirement</td><td><span style="display:inline-block;background:#e5e7eb;color:#374151;border-radius:999px;font-size:0.72rem;font-weight:600;padding:2px 10px;">Not started</span></td></tr></tbody></table></div>
+</section>
+
+<section class="tight-top">
+  <div class="section-head"><h2>Not Yet Covered</h2>
+    <p>Defined in the RDK-B Component List 2026; not yet validated against an operationalized
+    Core RDK Broadband build in this revision.</p>
+  </div>
+  <table class="def-table"><thead><tr><th>Device Profile</th><th>Definition</th><th>Status</th></tr></thead><tbody><tr><td>EthWAN WiFi Router</td><td>IPv4/IPv6 router with Ethernet WAN and Wi-Fi AP features. EasyMesh features are optional.</td><td>RDK8-based target values available — see Profile Details (based on RDK8) below.</td></tr><tr><td>EXT EasyMesh</td><td>Wi-Fi extender device based on EasyMesh Agent technology; supports Wi-Fi AP fronthaul and Wi-Fi/Ethernet backhaul.</td><td>RDK8-based target values available — see Profile Details (based on RDK8) below.</td></tr><tr><td>Modem / ONU</td><td>Managed or unmanaged bridge from a WAN access technology to an Ethernet LAN port(s); may provide WAN configuration and diagnostics data. Does not include routing or Wi-Fi AP features.</td><td>This profile is defined in the RDK-B Component List 2026 but is not yet covered by the Hardware Compatibility Specification. All metric and peripheral fields are placeholders (n/a) pending a future revision.</td></tr><tr><td>GW</td><td>IPv4/IPv6 router with one or more WAN access technologies and Wi-Fi AP features.</td><td>This profile is defined in the RDK-B Component List 2026 but is not yet covered by the Hardware Compatibility Specification. All metric and peripheral fields are placeholders (n/a) pending a future revision.</td></tr><tr><td>GW OpenSync</td><td>IPv4/IPv6 router with one or more WAN access technologies and OpenSync Mesh Wi-Fi features.</td><td>This profile is defined in the RDK-B Component List 2026 but is not yet covered by the Hardware Compatibility Specification. All metric and peripheral fields are placeholders (n/a) pending a future revision.</td></tr><tr><td>GW EasyMesh</td><td>IPv4/IPv6 router with one or more WAN access technologies and EasyMesh Wi-Fi controller + agent features.</td><td>This profile is defined in the RDK-B Component List 2026 but is not yet covered by the Hardware Compatibility Specification. All metric and peripheral fields are placeholders (n/a) pending a future revision.</td></tr><tr><td>EXT OpenSync</td><td>Wi-Fi extender device based on OpenSync technology; supports Wi-Fi AP fronthaul and Wi-Fi/Ethernet backhaul.</td><td>This profile is defined in the RDK-B Component List 2026 but is not yet covered by the Hardware Compatibility Specification. All metric and peripheral fields are placeholders (n/a) pending a future revision.</td></tr></tbody></table>
+</section>
+
+</div>
+
+<button class="chatbox-toggle" id="chatbox-toggle" aria-label="Search the site">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.9 7.8L3 21l1.7-6.1A8.5 8.5 0 1 1 21 11.5z"/></svg>
+</button>
+<div class="chatbox-panel" id="chatbox-panel">
+  <div class="chatbox-header">
+    <div>
+      <div class="title">Search RDK-B Core Broadband</div>
+      <div class="subtitle">Keyword search across this site — not an AI, just a fast index</div>
+    </div>
+    <button class="chatbox-close" id="chatbox-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="chatbox-body" id="chatbox-body">
+    <div class="chatbox-welcome">Try: "WAN Manager", "RBUS", "TR-181", "boot chain", "modularity"...</div>
+  </div>
+  <form class="chatbox-form" id="chatbox-form">
+    <input class="chatbox-input" id="chatbox-input" type="text" placeholder="Ask a question…" autocomplete="off">
+    <button class="chatbox-submit" type="submit">Search</button>
+  </form>
+</div>
+
+
+<button class="contact-toggle" id="contact-toggle" aria-label="Contact us">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" opacity="0"/><path d="M3 6l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+</button>
+<div class="contact-panel" id="contact-panel">
+  <div class="contact-header">
+    <div>
+      <div class="title">Contact us</div>
+      <div class="subtitle">Send a message — we'll get it by email</div>
+    </div>
+    <button class="contact-close" id="contact-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="contact-body">
+    <form id="contact-form">
+      <div class="contact-field">
+        <label for="contact-name">Name</label>
+        <input id="contact-name" name="name" type="text" required>
+      </div>
+      <div class="contact-field">
+        <label for="contact-email">Your email</label>
+        <input id="contact-email" name="email" type="email" required>
+      </div>
+      <div class="contact-field">
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" name="message" rows="4" required></textarea>
+      </div>
+      <button class="contact-submit" id="contact-submit" type="submit">Send</button>
+      <div class="contact-status" id="contact-status"></div>
+    </form>
+    <a class="contact-mailto" href="mailto:chandrakanth_pokuru2@comcast.com">Or email chandrakanth_pokuru2@comcast.com directly</a>
+  </div>
+</div>
+
+
+
+<script>
+(function() {
+  let searchDocs = null;
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s ?? '';
+    return d.innerHTML;
+  }
+
+  function score(doc, terms) {
+    const title = doc.title.toLowerCase();
+    const text = doc.text.toLowerCase();
+    let s = 0;
+    for (const t of terms) {
+      if (title.includes(t)) s += 10;
+      if (text.includes(t)) s += 2;
+    }
+    return s;
+  }
+
+  function runSearch(query) {
+    const body = document.getElementById('chatbox-body');
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return;
+
+    if (!searchDocs) {
+      body.innerHTML = '<div class="chatbox-welcome">Loading search index…</div>';
+      fetch('search-index.json', { cache: 'no-store' })
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(data => { searchDocs = data.docs; renderResults(query, terms); })
+        .catch(err => { body.innerHTML = '<div class="chatbox-welcome">Could not load the search index (' + esc(err.message) + ').</div>'; });
+      return;
+    }
+    renderResults(query, terms);
+  }
+
+  function renderResults(query, terms) {
+    const body = document.getElementById('chatbox-body');
+    const scored = searchDocs
+      .map(doc => ({ doc, s: score(doc, terms) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s);
+
+    if (!scored.length) {
+      body.innerHTML = '<div class="chatbox-welcome">No matches for "' + esc(query) + '". Try a different term — component names, standard names, or words like "modularity" or "RBUS" work well.</div>';
+      return;
+    }
+
+    const best = scored[0].doc;
+    const rest = scored.slice(1, 6);
+
+    let html = '<div class="chatbox-answer">' +
+      '<div class="cb-cat">' + esc(best.category) + '</div>' +
+      '<div class="cb-title">' + esc(best.title) + '</div>' +
+      '<div class="cb-text">' + esc(best.text) + '</div>' +
+      '</div>';
+
+    if (rest.length) {
+      html += '<div class="chatbox-related">Related</div>';
+      html += rest.map(x => {
+        let href = x.doc.url.endsWith('#') ? x.doc.url.slice(0, -1) || '#' : x.doc.url;
+        if (href !== '#' && !/^([a-z]+:)?\/\//i.test(href)) href = '' + href;
+        return '<a class="chatbox-result" href="' + esc(href) + '">' +
+          '<div class="cb-r-title">' + esc(x.doc.title) + '</div>' +
+          '<div class="cb-r-cat">' + esc(x.doc.category) + '</div>' +
+          '</a>';
+      }).join('');
+    }
+    body.innerHTML = html;
+  }
+
+  const toggle = document.getElementById('chatbox-toggle');
+  const panel = document.getElementById('chatbox-panel');
+  const closeBtn = document.getElementById('chatbox-close');
+  const form = document.getElementById('chatbox-form');
+  const input = document.getElementById('chatbox-input');
+
+  toggle.addEventListener('click', () => { panel.classList.toggle('open'); if (panel.classList.contains('open')) input.focus(); });
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+  form.addEventListener('submit', (e) => { e.preventDefault(); if (input.value.trim()) runSearch(input.value.trim()); });
+})();
+</script>
+
+
+<script>
+(function() {
+  const toggle = document.getElementById('contact-toggle');
+  const panel = document.getElementById('contact-panel');
+  const closeBtn = document.getElementById('contact-close');
+  const form = document.getElementById('contact-form');
+  const submitBtn = document.getElementById('contact-submit');
+  const status = document.getElementById('contact-status');
+
+  toggle.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) document.getElementById('contact-name').focus();
+  });
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    status.textContent = '';
+    status.className = 'contact-status';
+
+    const payload = {
+      name: document.getElementById('contact-name').value,
+      email: document.getElementById('contact-email').value,
+      message: document.getElementById('contact-message').value,
+      _subject: 'New message from RDK-B Core Broadband site',
+    };
+
+    fetch('https://formsubmit.co/ajax/chandrakanth_pokuru2@comcast.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+      .then(() => {
+        status.textContent = 'Sent — thanks! We\'ll get back to you.';
+        status.className = 'contact-status ok';
+        form.reset();
+      })
+      .catch(err => {
+        status.textContent = 'Could not send (' + err.message + '). Try the email link below instead.';
+        status.className = 'contact-status err';
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send';
+      });
+  });
+})();
+</script>
+
+</body>
+</html>

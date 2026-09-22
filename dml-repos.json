@@ -1,0 +1,187 @@
+{
+  "_comment": "Maps a component's display name (exactly as it appears in components/ethwan-router-components.json) to where its interface data lives. Two forms: a plain string is the cpokuru repo slug, defaulting to dml.json on main; an object {\"repo\": \"...\", \"file\": \"...\", \"branch\": \"...\"} lets you point at any filename/branch (branch defaults to main if omitted). Add a line per component as its data file goes up -- no code changes needed either way.",
+  "WAN Manager": {
+    "repo": "RdkWanManager",
+    "file": "wanmanager_interface_v3.json"
+  },
+  "Ethernet Agent (used for WAN)": {
+    "repo": "ethernet-agent",
+    "file": "ethagent_interface_v1.json",
+    "branch": "develop"
+  },
+    "Ethernet Agent (used for LAN)": {
+    "repo": "ethernet-agent",
+    "file": "ethagent_interface_v1.json",
+    "branch": "develop"
+  },
+  "Test & Diagnostics": {
+    "repo": "test-and-diagnostic",
+    "file": "tad_interface_v1.json",
+    "branch": "develop"
+  },
+  "P&M": {
+    "repo": "provisioning-and-management",
+    "file": "pandm_interface_v4.json",
+    "branch": "develop"
+  },
+  "lan-manager-lite": {
+    "repo": "lan-manager-lite",
+    "file": "lmlite_interface_v2.json",
+    "branch": "develop"
+  },
+  "OneWiFi": {
+    "repo": "OneWifi",
+    "file": "onewifi_wifi_only_v1.json",
+    "branch": "develop"
+  },
+  "WebConfig": {
+    "repo": "webcfg",
+    "file": "webcfg_interface_v1.json",
+    "branch": "master"
+  },
+  "dhcp-manager (recipe for DHCP client and Server)": {
+    "repo": "dhcp-manager",
+    "file": "dhcpmgr_interface_v1.json",
+    "branch": "develop"
+  },
+   "dhcp-manager (recipe for DHCP client only)": {
+    "repo": "dhcp-manager",
+    "file": "dhcpmgr_interface_v1.json",
+    "branch": "develop"
+  },
+  "Web PA\n\nincluding:\n- parodus\n- parodus2ccsp\n- start-parodus\n- wdmp-c": {
+    "repo": "parodus2ccsp",
+    "file": "parodus2ccsp_interface_v1.json",
+    "branch": "master"
+  },
+  "tr069-protocol-agent": {
+    "repo": "tr069-protocol-agent",
+    "file": "tr69pa_interface_v1.json",
+    "branch": "develop"
+  },
+  "T2 Telemetry": {
+    "repo": "telemetry",
+    "file": "t2_interface_v1.json",
+    "branch": "develop"
+  },
+  "DSM": {
+    "repo": "DSM",
+    "file": "dsm_interface_v1.json",
+    "branch": "main"
+  },
+   "inter-device-manager": {
+    "repo": "inter-device-manager",
+    "file": "idm_interface_v1.json",
+    "branch": "main"
+  },
+  "telco-voice-manager": {
+    "repo": "telco-voice-manager",
+    "file": "telco_interface_v1.json",
+    "branch": "main"
+  },
+ "ccsp-xdns": {
+    "repo": "xdns",
+    "file": "xdns_interface_v1.json",
+    "branch": "develop"
+  },
+   "advanced-security": {
+    "repo": "advanced-security",
+    "file": "advsec_interface_v1.json",
+    "branch": "develop"
+  },
+   "component-registry": {
+    "repo": "component-registry",
+    "file": "cr_interface_v1.json",
+    "branch": "develop"
+  },
+   "secure-upnp": {
+    "repo": "secure-upnp",
+    "file": "secureupnp_interface_v1.json",
+    "branch": "develop"
+  },
+   "harvester": {
+    "repo": "harvester",
+    "file": "harvester_interface_v1.json",
+    "branch": "develop"
+  },
+  "platform-manager": {
+    "repo": "platform-manager",
+    "file": "platmgr_interface_v1.json",
+    "branch": "develop"
+  },
+   "led-manager": {
+    "repo": "led-manager",
+    "file": "led_interface_v1.json",
+    "branch": "main"
+  },
+   "notify-component": {
+    "repo": "notify-component",
+    "file": "notify_interface_v1.json",
+    "branch": "develop"
+  },
+    "Cellular Modem Mgr": {
+    "repo": "cellular-modem-manager",
+    "file": "cell_interface_v1.json",
+    "branch": "develop"
+  },
+  "cellular-manager": {
+    "repo": "cellular-manager",
+    "file": "cellcom_interface_v1.json",
+    "branch": "develop"
+  },
+  "Mesh Agent\n(Integrates with OpenSync v2.4)": {
+  "repo": "mesh-agent",
+  "file": "mesh_interface_v1.json",
+  "branch": "develop"
+  },
+  "Mesh Agent (Integrates with OpenSync v2.4)": {
+  "repo": "mesh-agent",
+  "file": "mesh_interface_v1.json",
+  "branch": "develop"
+  },
+  "moca-agent": {
+  "repo": "moca-agent",
+  "file": "moca_interface_v1.json",
+  "branch": "develop"
+  },
+  "MTA Agent": {
+  "repo": "media-terminal-adapter-agent",
+  "file": "mta_interface_v1.json",
+  "branch": "develop"
+  },
+  "cable-modem-agent": {
+  "repo": "cable-modem-agent",
+  "file": "cmagent_interface_v1.json",
+  "branch": "develop"
+  },
+  "xDSL Manager": {
+  "repo": "xdsl-manager",
+  "file": "xdsl_interface_v1.json",
+  "branch": "main"
+  },
+  "gpon-manager": {
+  "repo": "gpon-manager",
+  "file": "gpon_interface_v1.json",
+  "branch": "main"
+  },
+  "epon-manager": {
+  "repo": "epon-manager",
+  "file": "epon_interface_v1.json",
+  "branch": "main"
+  },
+  "EPON Agent": {
+  "repo": "CcspEPONAgent",
+  "file": "eponagent_interface_v1.json",
+  "branch": "main"
+  },
+  "PPP Manager": {
+  "repo": "ppp-manager",
+  "file": "ppp_interface_v1.json",
+  "branch": "main"
+  },
+  "hotspot": {
+  "repo": "hotspot",
+  "file": "hotspot_interface_v1.json",
+  "branch": "develop"
+  }
+}

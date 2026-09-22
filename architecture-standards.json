@@ -1,0 +1,77 @@
+{
+  "source": "RDK-B_CoreRDK_Spec_MVP(InternalReference)_v1.1.pdf §7.1.1",
+  "docs": [
+    {
+      "Standard": "Component modularity and organization",
+      "Requirements": "New or refactored software components MUST contain only software that implements a grouping of similar features. This design helps to ensure that the component may be added to a software build only when that feature set is needed. Software to implement other unrelated features MUST NOT be included in the component. The software source code, build recipes, unit test mechanisms and documentation for a component SHOULD be contained in a single software repo. If any of this is contained in more than one repo, the documentation in each repo must reference all other software repos containing any of this information for the component. Distro Flags SHOULD be implemented for all sub-features that may not be required for all markets or operators."
+    },
+    {
+      "Standard": "Component IPC Guidelines",
+      "Requirements": "RBUS APIs are the authoritative interface for RDKB component to component interprocess communications (IPC). All new software contributions to existing and new components MUST exclusively use RBUS APIs for IPC with other RDKB components. Contributions to both existing and new components MUST be scanned using a common RDK static analysis tool to compare with previous versions of the component (if any) to ensure that no new usage of older IPC mechanisms is added, including syseventd, DMCLI or CCSP APIs."
+    },
+    {
+      "Standard": "Component Build-Time Dependency Policy",
+      "Requirements": "Mandatory architecture review MUST be conducted for all new inter-component build-time dependencies. RDKB components MUST NOT have build-time dependencies with other RDKB components that are optional or N/A for any software profile(s). Components MAY have build-time dependencies with Common Core Components."
+    },
+    {
+      "Standard": "Component Run-Time Dependency Policy",
+      "Requirements": "Mandatory architecture review MUST be conducted for all new inter-component run-time dependencies. RDKB components MAY access/consume data model elements implemented in other components or implemented in downloaded apps. This MAY include data model elements implemented in components that are optional or N/A for any profile. Components MUST NOT have hard (inflexible) run-time dependencies on these data model elements. If data model element(s) are not available, the accessing/consuming component MUST dynamically adapt to use only the data model elements and capabilities that are available at runtime. Components that attempt to access/consume data models that are unavailable MUST NOT stall, crash or fail to provide features unrelated to the missing data model elements."
+    },
+    {
+      "Standard": "Component Unit Testing Requirements",
+      "Requirements": "All new components MUST ship with isolated unit tests requiring no external dependencies. HAL interfaces must have rdkb-halif-test-* suite before being declared stable. Test coverage metrics MUST be published per release. Testing must auto-discover the supported data model elements (including event and method usage) and auto-create a document of the supported data model elements when each feature flag is enabled. This document MUST (at a minimum) list all data model names provided in the component and which APIs are supported for each data model (set, get, add instance, delete instance, subscribe to event, un-subscribe, method invoke)."
+    },
+    {
+      "Standard": "Data Model Documentation Standards",
+      "Requirements": "Data Model documentation MUST be sufficient to enable other developers/testers/system integrators to understand how to use each data model element. When a software contribution is received that updates an existing component or creates a new component, the contribution MUST contain detailed documentation of any new data models and changes to older data models. This MUST include the data model name, the supported RBUS APIs (examples: Set, Get, Add Instance, Subscribe, Unsubscribe, Method Invoke,"
+    },
+    {
+      "Standard": "Data Model Standards (TR-181)",
+      "Requirements": "Data models used in RDKB software contributions SHOULD follow the TR-181 standard when possible. Software contributions that use a data model name previously documented in the TR-181 standard MUST fully comply with the most recent TR-181 documentation for that name. If the most recent TR181 standard does not provide a data model name with the desired new functionality or the software contribution does not fully comply with how TR-181 standard describes how an existing name is used, then a new data model name MAY be created. New data model names MUST use the TR-181 organization and hierarchy when possible. New data model names MUST comply with the applicable extension format for non-standard names. New data model names SHOULD use the format: <existing TR-181 object hierarchy>.X_RDK-<new name>."
+    },
+    {
+      "Standard": "HAL Documentation Standards",
+      "Requirements": "Each HAL interface must have a published interface specification document."
+    },
+    {
+      "Standard": "Interface Versioning & Backward Compatibility",
+      "Requirements": "All components and HAL interface MUST follow semantic versioning (MAJOR.MINOR.PATCH). Large functional changes and any change that is not backward compatible MUST increment the MAJOR version. Small planned features additions or bug fixes SHOULD increment the MINOR version. Unplanned bug fixes SHOULD increment the PATCH version. Deprecated interfaces SHOULD remain supported a minimum of two release cycles before removal."
+    },
+    {
+      "Standard": "Telemetry & Observability Standards",
+      "Requirements": "Components MUST emit logs conforming to the RDK-B common logging format. Critical state transitions SHOULD publish RBUS events and/or provide status properties that can be read by other RBUS components. ."
+    },
+    {
+      "Standard": "Build & Packaging Standards (Yocto/OE)",
+      "Requirements": "Components MUST build cleanly under the supported Yocto release with no layer dependency cycles. Recipes MUST declare explicit LICENSE and SPDX identifiers. Distro flags MUST gate all profile-specific or optional features."
+    },
+    {
+      "Standard": "Error Handling & Resilience Standards",
+      "Requirements": "Components MUST use defined RBUS error codes, not custom/undocumented codes. Crash-prone components MUST integrate with systemd watchdog and support clean restart without state corruption. Core dumps MUST be captured via the CrashUpload framework."
+    },
+    {
+      "Standard": "Naming & Repository Conventions",
+      "Requirements": "Component repos MUST follow the rdkb-<component> convention. New components MUST follow the Rdk* prefix and <Function> HAL suffix conventions already established in the architecture. Branch naming aligns with governance branch policy (7.2.12)."
+    },
+    {
+      "Standard": "Code Quality & Static Analysis Standards",
+      "Requirements": "New C/C++ components MUST pass static analysis (cppcheck/Coverity) with zero high-severity findings before merge. Coding style MUST conform to the published RDK-B style guide. Memory safety tooling (ASan/Valgrind) runs in CI for native builds."
+    },
+    {
+      "Standard": "Northbound Protocol Onboarding",
+      "Requirements": "Any new remote-management protocol (beyond TR-369/TR-069/WebPA/Webconfig/SNMP/DAC/SSH) MUST be supported with a new Protocol Adapter component designed to abstract that protocol and allow the protocol to transparently send corresponding messages to other components using RBUS APIs. New protocols MUST NOT reach into RDKB components directly."
+    },
+    {
+      "Standard": "WAN Technology Onboarding",
+      "Requirements": "A new WAN access technology MUST integrate through RdkWanManager plus a technology-specific manager/agent (following the GPON/xDSL/Cellular/Docsis/EPON pattern); bespoke managers outside this pattern require architecture review."
+    },
+    {
+      "Standard": "Edge AI / ML Integration Standards*",
+      "Requirements": "AI/ML inference components MUST use vendor-neutral model formats (ONNX/RKNN), decoupled from any single NPU vendor SDK. Inference latency and resource budgets documented per model. Versioning/rollback supported for production deployment. Layer placement (dedicated color-coded layer vs folded into other RDKB layers) still needs a decision before this is fully ready."
+    },
+    {
+      "Standard": "Integration of differentiating or proprietary software Third-Party Component Integration & HAL Extension Standards",
+      "Requirements": "Developers and System Integrators that desire to add differentiation or proprietary software on top of RDKB open source should follow one of two paths: 1) New differentiating or proprietary software that is hardware independent SHOULD use the existing TR-181 data models already supported by RDKB in order to control, optimize or extend RDKB features where possible. If new code needs to be added to the RDKB open source software to provide basic enabling features, then new data models to support this SHOULD be contributed to the RDKB community. This MAY be done while excluding differentiating or proprietary software by packaging that software in components that are NOT open sourced to the community. 2) New differentiating or proprietary software that is hardware dependent may be added in the vendor layer. This software MUST support RDK HAL API definitions. If HAL APIs need to be modified or extended, vendor MUST work with the RDK community to make these changes. This allows vendors to differentiate within the vendor layer while keeping a c ommon interface to the vendor layer."
+    }
+  ]
+}

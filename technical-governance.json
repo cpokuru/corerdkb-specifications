@@ -1,0 +1,77 @@
+{
+  "source": "RDK-B_CoreRDK_Spec_MVP(InternalReference)_v1.1.pdf §7.1.2",
+  "docs": [
+    {
+      "Standard": "IPC Mechanism Selection",
+      "Requirements": "RBUS is the default and only sanctioned IPC for new RDKB components. D-Bus is permitted only for legacy/vendor OSS that natively requires it (e.g. ModemManager), bridged into RBUS rather than consumed directly. USP/UDS is reserved for the USP Agent↔Controller boundary only. Downloaded Apps may use USP/UDS provided that a USP/UDS API Gateway converts these messages to RBUS. Any other IPC requires architecture review with documented justification."
+    },
+    {
+      "Standard": "Eventing Standards",
+      "Requirements": "State-change events SHOULD be published via RBUS event/subscribe, not polling Event payloads that contain a value SHOULD carry both updated parameter/value and the previous parameter/value. High-frequency events (>1/sec) SHOULD be rate-limited or coalesced at the publisher unless typical use cases require all high frequency events to be published"
+    },
+    {
+      "Standard": "Storage & Persistence Standards",
+      "Requirements": "Data-model-backed parameters requiring persistence SHOULD use PSM or a new common method defined in the future. Structured local storage (logs, model artifacts) MUST use a defined path with documented size quotas with no writes to rootfs."
+    },
+    {
+      "Standard": "Footprint / CPU / RAM Budget",
+      "Requirements": "Every new component MUST document typical RAM, peak RAM, and flash footprint targets at design review, scoped to its device profile tier. Regressions beyond an agreed threshold versus prior release require architecture sign-off. Lower-tier profiles MUST never silently inherit other-profile footprint assumptions."
+    },
+    {
+      "Standard": "system()/Shell-out Usage",
+      "Requirements": "Calling system()/popen() from C/C++ daemons is discouraged by default; native library calls are preferred. Where unavoidable, the call MUST check return codes, sanitize interpolated input against shell injection, and never runs in a signal handler or high-frequency loop."
+    },
+    {
+      "Standard": "OSS Usage Standards",
+      "Requirements": "OSS dependencies come from the sanctioned Linux OSS layer list; new dependencies require review for license compatibility, CVE history, and maintenance activity. RDK-B wraps OSS via a thin adapter rather than embedding internals directly. Forking OSS instead of upstreaming requires approval plus a reconciliation plan."
+    },
+    {
+      "Standard": "@When to Use HAL",
+      "Requirements": "Any interaction with vendor/SoC-specific hardware or firmware MUST pass through a published HAL; direct vendor SDK calls MUST NOT be used.. A HAL is required only where behavior differs across silicon vendors — platform-independent behavior belongs in Linux OSS or a native component."
+    },
+    {
+      "Standard": "No RDK-B IPC Within vendor layer",
+      "Requirements": "Vendor layer HAL implementations MUST NOT contain TR-181/data-model awareness, RBUS usage or sysevent/syscfg calls."
+    },
+    {
+      "Standard": "Direct Kernel Interaction",
+      "Requirements": "Components talk to the kernel directly (syscalls, sysfs, procfs) only for OS-level facilities with no existing HAL/OSS abstraction. Any kernel interface used by more than one component is wrapped in a shared internal library, not duplicated. New kernel module/driver dependencies require platform-layer governance review (7.2.6)."
+    },
+    {
+      "Standard": "Netlink vs Other Kernel Interfaces",
+      "Requirements": "Netlink is preferred for asynchronous kernel notifications (link state, routing, neighbor changes); polling sysfs/procfs where a netlink equivalent exists is prohibited. ioctl is permitted only for legacy drivers with no netlink support, isolated behind a HAL/adapter."
+    },
+    {
+      "Standard": "C/C++ Coding Anti-Patterns",
+      "Requirements": "Blocking I/O MUST NOT occur on a component's main RBUS event-handling thread. strcpy/sprintf and unbounded buffers for variable-length input MUST NOT be used in favor of bounded equivalents; malloc return values MUST always be checked and an error must be logged and returned to higher level software Global mutable state shared across translation units is prohibited except through a documented, lock-protected accessor."
+    },
+    {
+      "Standard": "Sysevent Usage Standards",
+      "Requirements": "Sysevent usage is expected to be deprecated over time. New software contributions MUST NOT add to sysevent usage or add any new sysevent keys."
+    },
+    {
+      "Standard": "Scripting Usage Standards",
+      "Requirements": "Shell scripts MAY be used for one-shot boot/init orchestration and MUST NOT be used for long running stateful logic. Interpreted languages are discouraged on memory/flash-constrained profiles unless explicitly justified — native C/C++ or RUST SHOULD be used"
+    },
+    {
+      "Standard": "Calling C/C++ from Scripts",
+      "Requirements": "Scripts MUST call into native functionality via the component's published data model interface using rbuscli or RBUS APIs. Scripts MUST NOT link against internal .so symbols outside a published API. Scripts MUST NOT parse internal binary log/state formats."
+    },
+    {
+      "Standard": "RFC vs syscfg vs Build Flag",
+      "Requirements": "A features or behavior SHOULD use a data model property or method invocation for enable/disable if the feature or behavior needs remote, post-deployment toggling without a firmware push. An operator specific or device specific “Factory Default” value may be used at build time to control the default behavior of a feature. A feature or behavior that needs to be controlled at build time SHOULD use a Distro/build flag. Large features MAY be controlled at build time by the presence/absence of a software component in the build."
+    },
+    {
+      "Standard": "Threading & Concurrency Model",
+      "Requirements": "New daemons MUST default to a single-threaded event loop unless a specific workload justifies multi-threading. Where threads are used, lock ordering MUST be documented and mutexes MUST NOT be held across an RBUS call. There MUST NOT be unbounded thread spawning per request/connection."
+    },
+    {
+      "Standard": "Logging Level Standards",
+      "Requirements": "Components MUST use rdk_logger exclusively, never raw printf/syslog. ERROR is reserved for conditions requiring operator/telemetry attention; DEBUG/TRACE SHOULD be compiled out or runtime-gated in production builds."
+    },
+    {
+      "Standard": "Shared Library ABI Versioning",
+      "Requirements": "Any .so consumed by more than one component MUST follow symbol versioning"
+    }
+  ]
+}

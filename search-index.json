@@ -1,0 +1,994 @@
+{
+  "docs": [
+    {
+      "title": "What is RDKB Core?",
+      "text": "RDKB Core is a collection of foundational building-blocks called \"components.\" They're designed for easier reuse, improved modularity, RDK Ready vendor certification, reduced code size, and consistent interface definitions.",
+      "category": "About",
+      "url": "index.html#"
+    },
+    {
+      "title": "Easier Component Reuse",
+      "text": "Goal — Core RDKB components must be easy to reuse across every device profile — from a simple modem/ONU, to an Ethernet router or Wi-Fi gateway, to an EasyMesh controller or extender, to add-on profiles like app lifecycle management and IoT. Challenge — Historical releases focused narrowly on the Ethernet Wi-Fi Router or Wi-Fi Gateway profile, so code carried assumptions that made reuse difficult elsewhere — operators had to modify components themselves, increasing time-to-market and cost.",
+      "category": "Why RDKB Core",
+      "url": "index.html#easier-component-reuse"
+    },
+    {
+      "title": "Modularity — Build-Time Dependencies",
+      "text": "Goal — Avoid tight coupling and unnecessary build-time dependencies. Developers shouldn't have to manually edit and strip dependencies every time a component is reused. Challenge — Some components have problem build-time dependencies with other components. If these components are not in the software build, then a build time error will occur. For example: OneWifi, WAN Manager, DHCP Manager, P&M, Utopia, Test and Diag, TR-069 PA, Xconf, and others — carry an unnecessary build-time dependency on the cable modem HAL interface today.",
+      "category": "Why RDKB Core",
+      "url": "index.html#modularity-build-time-dependencies"
+    },
+    {
+      "title": "Modularity — Run-Time Dependencies",
+      "text": "Goal — Run-time dependencies to optional components and apps must be flexible and dynamic. A component that relies on another's methods or properties must keep providing its expected feature subset even when that component isn't present. Challenge — Some components have problem run-time dependencies with other components. If these components are not in the software build, then a run-time error, unexpected behavior or crash may occur. For example: Utopia, RFC, CcspCr, Test and Diag, TR-069 PA, Xconf, OneWifi, CcspWiFiAgent, CcspHotspot, and others — have an inflexible run-time dependency on T2 telemetry. This can be a problem because T2 telemetry is an optional component; some operators use other telemetry approaches entirely.",
+      "category": "Why RDKB Core",
+      "url": "index.html#modularity-run-time-dependencies"
+    },
+    {
+      "title": "Reduced Code Size",
+      "text": "Goal — Code must scale from small modem/ONUs and extenders up to high-end gateways with apps and IoT. Each component should support a limited, well-defined feature set, allocate only the memory it needs, and be easy to exclude when not needed. Challenge — Large components like Utopia and P&M are hard to reason about or extract from the build. Some code (e.g. CCSP Common Lib) over-allocates memory, and documentation on including/excluding optional components needs improvement.",
+      "category": "Why RDKB Core",
+      "url": "index.html#reduced-code-size"
+    },
+    {
+      "title": "Consistent Interface Definitions",
+      "text": "Goal — Use a common way to persist values and a standard IPC mechanism between components, with test code that exercises that IPC the way it's actually used in production — a pre-validated core reduces integration and testing cycles. Challenge — Multiple persistence approaches are in use today (sysConfig, PSM, Platform HAL, mySQL), and some older components still use SysEvent, DMCLI, or Common Lib for IPC instead of RBUS.",
+      "category": "Why RDKB Core",
+      "url": "index.html#consistent-interface-definitions"
+    },
+    {
+      "title": "Well-defined interfaces to vendor code",
+      "text": "Use industry-standard vendor interfaces (e.g. NL80211) as the RDKB HAL wherever they already exist. Where gaps remain, RDK components support an RDK-defined HAL interface — or a standard HAL interface plus RDK-defined HAL extensions. Vendor interfaces evolve over time, so tight version control is maintained between each HAL spec, the RDKB component using it, and the vendor code certified against it.",
+      "category": "RDK Ready",
+      "url": "index.html#"
+    },
+    {
+      "title": "Test and certification program",
+      "text": "A test mechanism exists for each individual HAL interface spec, and every vendor runs the same tests. A formal certification process verifies vendor compliance with specific HAL interfaces and versions. Because certification is modular, a Wi-Fi SoC vendor certifies only against the RDKB Wi-Fi HAL and a DOCSIS SoC vendor only against the Cable Modem HAL — so operators can mix and match vendors (e.g. Wi-Fi from Vendor A, GPON from Vendor B) on the same platform.",
+      "category": "RDK Ready",
+      "url": "index.html#"
+    },
+    {
+      "title": "Modularity, code reuse & scalability",
+      "text": "Easier and faster code reuse; Minimized build-time dependencies; Flexible run-time dependencies; Code size that scales across device types; Flexible logging and diagnostics",
+      "category": "Benefits & uses",
+      "url": "index.html#"
+    },
+    {
+      "title": "RDK Ready",
+      "text": "A certification program for vendors; Improved HAL interface definitions; Test code provided for each HAL interface",
+      "category": "Benefits & uses",
+      "url": "index.html#"
+    },
+    {
+      "title": "Consistent interface definitions",
+      "text": "Quicker on-ramp for new developers; Easier training; A larger talent pool; Better testability; Higher quality",
+      "category": "Benefits & uses",
+      "url": "index.html#"
+    },
+    {
+      "title": "Tier 5 — Cloud / ACS",
+      "text": "Operator cloud: ACS, USP Controller, xConf, WebConfig, Telemetry backends, Crash collection, Log aggregation.",
+      "category": "Architecture — five-tier model",
+      "url": "index.html#"
+    },
+    {
+      "title": "Tier 4 — RDK-B Protocol Agent Components",
+      "text": "parodus/WebPA, usp-pa-vendor-rdk, tr069-protocol-agent, xconf-client, WebconfigFramework, T2 telemetry.",
+      "category": "Architecture — five-tier model",
+      "url": "index.html#"
+    },
+    {
+      "title": "Tier 3 — RDK-B Middleware",
+      "text": "Other RDK-B Components: Examples: OneWiFi, wan-manager, dhcp-manager, DSM, Dobby, BartonCore, all feature components. All communicate via RBUS. RDK-B Downloadable Apps: Broadband apps that may be downloaded and run within the RDK-B app framework.",
+      "category": "Architecture — five-tier model",
+      "url": "index.html#"
+    },
+    {
+      "title": "Tier 2 — RDK-B HAL Interfaces",
+      "text": "Standard Linux interfaces and RDK-defined interfaces used to abstract vendor software/hardware.",
+      "category": "Architecture — five-tier model",
+      "url": "index.html#"
+    },
+    {
+      "title": "Tier 1 — Vendor Layer",
+      "text": "Physical silicon, vendor BSP and driver software.",
+      "category": "Architecture — five-tier model",
+      "url": "index.html#"
+    },
+    {
+      "title": "RDK Platform Test Suite",
+      "text": "RDK Platform — component behavior, integration, data model, management, security, profile conformance Owner: RDK-B Owner.",
+      "category": "Architecture — test suites",
+      "url": "index.html#"
+    },
+    {
+      "title": "Vendor Test Suite",
+      "text": "Vendor Layer — HAL implementation correctness, SoC-specific behavior Owner: HAL Spec Owner.",
+      "category": "Architecture — test suites",
+      "url": "index.html#"
+    },
+    {
+      "title": "Component modularity and organization",
+      "text": "New or refactored software components MUST contain only software that implements a grouping of similar features. This design helps to ensure that the component may be added to a software build only when that feature set is needed. Software to implement other unrelated features MUST NOT be included in the component. The software source code, build recipes, unit test mechanisms and documentation for a component SHOULD be contained in a single software repo. If any of this is contained in more than one repo, the documentation in each repo must reference all other software repos containing any of this information for the component. Distro Flags SHOULD be implemented for all sub-features that may not be required for all markets or operators.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Component IPC Guidelines",
+      "text": "RBUS APIs are the authoritative interface for RDKB component to component interprocess communications (IPC). All new software contributions to existing and new components MUST exclusively use RBUS APIs for IPC with other RDKB components. Contributions to both existing and new components MUST be scanned using a common RDK static analysis tool to compare with previous versions of the component (if any) to ensure that no new usage of older IPC mechanisms is added, including syseventd, DMCLI or CCSP APIs.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Component Build-Time Dependency Policy",
+      "text": "Mandatory architecture review MUST be conducted for all new inter-component build-time dependencies. RDKB components MUST NOT have build-time dependencies with other RDKB components that are optional or N/A for any software profile(s). Components MAY have build-time dependencies with Common Core Components.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Component Run-Time Dependency Policy",
+      "text": "Mandatory architecture review MUST be conducted for all new inter-component run-time dependencies. RDKB components MAY access/consume data model elements implemented in other components or implemented in downloaded apps. This MAY include data model elements implemented in components that are optional or N/A for any profile. Components MUST NOT have hard (inflexible) run-time dependencies on these data model elements. If data model element(s) are not available, the accessing/consuming component MUST dynamically adapt to use only the data model elements and capabilities that are available at runtime. Components that attempt to access/consume data models that are unavailable MUST NOT stall, crash or fail to provide features unrelated to the missing data model elements.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Component Unit Testing Requirements",
+      "text": "All new components MUST ship with isolated unit tests requiring no external dependencies. HAL interfaces must have rdkb-halif-test-* suite before being declared stable. Test coverage metrics MUST be published per release. Testing must auto-discover the supported data model elements (including event and method usage) and auto-create a document of the supported data model elements when each feature flag is enabled. This document MUST (at a minimum) list all data model names provided in the component and which APIs are supported for each data model (set, get, add instance, delete instance, subscribe to event, un-subscribe, method invoke).",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Data Model Documentation Standards",
+      "text": "Data Model documentation MUST be sufficient to enable other developers/testers/system integrators to understand how to use each data model element. When a software contribution is received that updates an existing component or creates a new component, the contribution MUST contain detailed documentation of any new data models and changes to older data models. This MUST include the data model name, the supported RBUS APIs (examples: Set, Get, Add Instance, Subscribe, Unsubscribe, Method Invoke,",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Data Model Standards (TR-181)",
+      "text": "Data models used in RDKB software contributions SHOULD follow the TR-181 standard when possible. Software contributions that use a data model name previously documented in the TR-181 standard MUST fully comply with the most recent TR-181 documentation for that name. If the most recent TR181 standard does not provide a data model name with the desired new functionality or the software contribution does not fully comply with how TR-181 standard describes how an existing name is used, then a new data model name MAY be created. New data model names MUST use the TR-181 organization and hierarchy when possible. New data model names MUST comply with the applicable extension format for non-standard names. New data model names SHOULD use the format: <existing TR-181 object hierarchy>.X_RDK-<new name>.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "HAL Documentation Standards",
+      "text": "Each HAL interface must have a published interface specification document.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Interface Versioning & Backward Compatibility",
+      "text": "All components and HAL interface MUST follow semantic versioning (MAJOR.MINOR.PATCH). Large functional changes and any change that is not backward compatible MUST increment the MAJOR version. Small planned features additions or bug fixes SHOULD increment the MINOR version. Unplanned bug fixes SHOULD increment the PATCH version. Deprecated interfaces SHOULD remain supported a minimum of two release cycles before removal.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Telemetry & Observability Standards",
+      "text": "Components MUST emit logs conforming to the RDK-B common logging format. Critical state transitions SHOULD publish RBUS events and/or provide status properties that can be read by other RBUS components. .",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Build & Packaging Standards (Yocto/OE)",
+      "text": "Components MUST build cleanly under the supported Yocto release with no layer dependency cycles. Recipes MUST declare explicit LICENSE and SPDX identifiers. Distro flags MUST gate all profile-specific or optional features.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Error Handling & Resilience Standards",
+      "text": "Components MUST use defined RBUS error codes, not custom/undocumented codes. Crash-prone components MUST integrate with systemd watchdog and support clean restart without state corruption. Core dumps MUST be captured via the CrashUpload framework.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Naming & Repository Conventions",
+      "text": "Component repos MUST follow the rdkb-<component> convention. New components MUST follow the Rdk* prefix and <Function> HAL suffix conventions already established in the architecture. Branch naming aligns with governance branch policy (7.2.12).",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Code Quality & Static Analysis Standards",
+      "text": "New C/C++ components MUST pass static analysis (cppcheck/Coverity) with zero high-severity findings before merge. Coding style MUST conform to the published RDK-B style guide. Memory safety tooling (ASan/Valgrind) runs in CI for native builds.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Northbound Protocol Onboarding",
+      "text": "Any new remote-management protocol (beyond TR-369/TR-069/WebPA/Webconfig/SNMP/DAC/SSH) MUST be supported with a new Protocol Adapter component designed to abstract that protocol and allow the protocol to transparently send corresponding messages to other components using RBUS APIs. New protocols MUST NOT reach into RDKB components directly.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "WAN Technology Onboarding",
+      "text": "A new WAN access technology MUST integrate through RdkWanManager plus a technology-specific manager/agent (following the GPON/xDSL/Cellular/Docsis/EPON pattern); bespoke managers outside this pattern require architecture review.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Edge AI / ML Integration Standards*",
+      "text": "AI/ML inference components MUST use vendor-neutral model formats (ONNX/RKNN), decoupled from any single NPU vendor SDK. Inference latency and resource budgets documented per model. Versioning/rollback supported for production deployment. Layer placement (dedicated color-coded layer vs folded into other RDKB layers) still needs a decision before this is fully ready.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Integration of differentiating or proprietary software Third-Party Component Integration & HAL Extension Standards",
+      "text": "Developers and System Integrators that desire to add differentiation or proprietary software on top of RDKB open source should follow one of two paths: 1) New differentiating or proprietary software that is hardware independent SHOULD use the existing TR-181 data models already supported by RDKB in order to control, optimize or extend RDKB features where possible. If new code needs to be added to the RDKB open source software to provide basic enabling features, then new data models to support this SHOULD be contributed to the RDKB community. This MAY be done while excluding differentiating or proprietary software by packaging that software in components that are NOT open sourced to the community. 2) New differentiating or proprietary software that is hardware dependent may be added in the vendor layer. This software MUST support RDK HAL API definitions. If HAL APIs need to be modified or extended, vendor MUST work with the RDK community to make these changes. This allows vendors to differentiate within the vendor layer while keeping a c ommon interface to the vendor layer.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "IPC Mechanism Selection",
+      "text": "RBUS is the default and only sanctioned IPC for new RDKB components. D-Bus is permitted only for legacy/vendor OSS that natively requires it (e.g. ModemManager), bridged into RBUS rather than consumed directly. USP/UDS is reserved for the USP Agent↔Controller boundary only. Downloaded Apps may use USP/UDS provided that a USP/UDS API Gateway converts these messages to RBUS. Any other IPC requires architecture review with documented justification.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Eventing Standards",
+      "text": "State-change events SHOULD be published via RBUS event/subscribe, not polling Event payloads that contain a value SHOULD carry both updated parameter/value and the previous parameter/value. High-frequency events (>1/sec) SHOULD be rate-limited or coalesced at the publisher unless typical use cases require all high frequency events to be published",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Storage & Persistence Standards",
+      "text": "Data-model-backed parameters requiring persistence SHOULD use PSM or a new common method defined in the future. Structured local storage (logs, model artifacts) MUST use a defined path with documented size quotas with no writes to rootfs.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Footprint / CPU / RAM Budget",
+      "text": "Every new component MUST document typical RAM, peak RAM, and flash footprint targets at design review, scoped to its device profile tier. Regressions beyond an agreed threshold versus prior release require architecture sign-off. Lower-tier profiles MUST never silently inherit other-profile footprint assumptions.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "system()/Shell-out Usage",
+      "text": "Calling system()/popen() from C/C++ daemons is discouraged by default; native library calls are preferred. Where unavoidable, the call MUST check return codes, sanitize interpolated input against shell injection, and never runs in a signal handler or high-frequency loop.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "OSS Usage Standards",
+      "text": "OSS dependencies come from the sanctioned Linux OSS layer list; new dependencies require review for license compatibility, CVE history, and maintenance activity. RDK-B wraps OSS via a thin adapter rather than embedding internals directly. Forking OSS instead of upstreaming requires approval plus a reconciliation plan.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "@When to Use HAL",
+      "text": "Any interaction with vendor/SoC-specific hardware or firmware MUST pass through a published HAL; direct vendor SDK calls MUST NOT be used.. A HAL is required only where behavior differs across silicon vendors — platform-independent behavior belongs in Linux OSS or a native component.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "No RDK-B IPC Within vendor layer",
+      "text": "Vendor layer HAL implementations MUST NOT contain TR-181/data-model awareness, RBUS usage or sysevent/syscfg calls.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Direct Kernel Interaction",
+      "text": "Components talk to the kernel directly (syscalls, sysfs, procfs) only for OS-level facilities with no existing HAL/OSS abstraction. Any kernel interface used by more than one component is wrapped in a shared internal library, not duplicated. New kernel module/driver dependencies require platform-layer governance review (7.2.6).",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Netlink vs Other Kernel Interfaces",
+      "text": "Netlink is preferred for asynchronous kernel notifications (link state, routing, neighbor changes); polling sysfs/procfs where a netlink equivalent exists is prohibited. ioctl is permitted only for legacy drivers with no netlink support, isolated behind a HAL/adapter.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "C/C++ Coding Anti-Patterns",
+      "text": "Blocking I/O MUST NOT occur on a component's main RBUS event-handling thread. strcpy/sprintf and unbounded buffers for variable-length input MUST NOT be used in favor of bounded equivalents; malloc return values MUST always be checked and an error must be logged and returned to higher level software Global mutable state shared across translation units is prohibited except through a documented, lock-protected accessor.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Sysevent Usage Standards",
+      "text": "Sysevent usage is expected to be deprecated over time. New software contributions MUST NOT add to sysevent usage or add any new sysevent keys.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Scripting Usage Standards",
+      "text": "Shell scripts MAY be used for one-shot boot/init orchestration and MUST NOT be used for long running stateful logic. Interpreted languages are discouraged on memory/flash-constrained profiles unless explicitly justified — native C/C++ or RUST SHOULD be used",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Calling C/C++ from Scripts",
+      "text": "Scripts MUST call into native functionality via the component's published data model interface using rbuscli or RBUS APIs. Scripts MUST NOT link against internal .so symbols outside a published API. Scripts MUST NOT parse internal binary log/state formats.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "RFC vs syscfg vs Build Flag",
+      "text": "A features or behavior SHOULD use a data model property or method invocation for enable/disable if the feature or behavior needs remote, post-deployment toggling without a firmware push. An operator specific or device specific “Factory Default” value may be used at build time to control the default behavior of a feature. A feature or behavior that needs to be controlled at build time SHOULD use a Distro/build flag. Large features MAY be controlled at build time by the presence/absence of a software component in the build.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Threading & Concurrency Model",
+      "text": "New daemons MUST default to a single-threaded event loop unless a specific workload justifies multi-threading. Where threads are used, lock ordering MUST be documented and mutexes MUST NOT be held across an RBUS call. There MUST NOT be unbounded thread spawning per request/connection.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Logging Level Standards",
+      "text": "Components MUST use rdk_logger exclusively, never raw printf/syslog. ERROR is reserved for conditions requiring operator/telemetry attention; DEBUG/TRACE SHOULD be compiled out or runtime-gated in production builds.",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Shared Library ABI Versioning",
+      "text": "Any .so consumed by more than one component MUST follow symbol versioning",
+      "category": "Technical Governance",
+      "url": "technical-governance.html"
+    },
+    {
+      "title": "Broadband Forum TR-069 (CWMP)",
+      "text": "Applies to: ACS Server, TR-069 adapter. Legacy remote management protocol",
+      "category": "Architecture Standards — Remote management & data modeling",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Broadband Forum TR-369 (USP)",
+      "text": "Applies to: USP Controller, TR-369 adapter. Transport-agnostic (WebSocket/MQTT/STOMP/CoAP)",
+      "category": "Architecture Standards — Remote management & data modeling",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Broadband Forum TR-181 Device:2 Data Model",
+      "text": "Applies to: All TR-181-backed parameters (WebPA,TR-069, USP and internal components that use TR-181 as the IPC contract) and OneWiFi interface to 3rd party WiFi optimization software using DataElements, downloaded apps that provide or consume services.. Single underlying data model across northbound protocols, internal components, 3rd party differentiating components and downloaded apps.",
+      "category": "Architecture Standards — Remote management & data modeling",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "OpenAPI 3.x",
+      "text": "Applies to: Any REST API surface (RestAPI-tagged USP/WebPA paths). Required for documenting REST interfaces",
+      "category": "Architecture Standards — Remote management & data modeling",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IEEE 802.11ax / 802.11be",
+      "text": "Applies to: OneWifi, rdk-wifi-hal, Vendor Wi-Fi HAL. Wi-Fi 6/6E/7 PHY-MAC conformance",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Wi-Fi Alliance EasyMesh R6",
+      "text": "Applies to: EasyMesh controller / Agent interface and associated features.. Multi-AP interoperability certification",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Wi-Fi Alliance WPA3 / WPS Certification",
+      "text": "Applies to: WPS box, Wi-Fi security stack.",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IEEE 802.1Q",
+      "text": "Applies to: RDKVlanBridgingManager, VLAN utils, VLAN HAL. VLAN tagging for ISP/service separation",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IEEE 802.3",
+      "text": "Applies to: Ethernet switch HAL. Base Ethernet conformance",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Bluetooth SIG Core Specification",
+      "text": "Applies to: Bluetoothctl, Bluetooth HCI.",
+      "category": "Architecture Standards — Wireless & local networking",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Thread Group Thread Specification",
+      "text": "Applies to: BartonCore (Thread network layer).",
+      "category": "Architecture Standards — IoT & smart home standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Connectivity Standards Alliance (CSA) Matter Specification",
+      "text": "Applies to: BartonCore (Matter controller/bridge).",
+      "category": "Architecture Standards — IoT & smart home standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "CSA Zigbee Specification",
+      "text": "Applies to: BartonCore (Zigbee bridge). Legacy device compatibility",
+      "category": "Architecture Standards — IoT & smart home standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IEEE 802.15.4",
+      "text": "Applies to: Underlying radio layer for Thread/Zigbee within BartonCore.",
+      "category": "Architecture Standards — IoT & smart home standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Device.IoT.* TR-181 (WT-480 pathway)",
+      "text": "Applies to: barton-rbus-provider. Bridges BartonCore into RBUS/TR-181",
+      "category": "Architecture Standards — IoT & smart home standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 1035 (DNS)",
+      "text": "Applies to: DNS proxy (Linux OSS), CcspXdns. CcspXdns is RDK-B's DNS-based filtering/redirect feature, not a separate protocol",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 6762/6763 (mDNS/DNS-SD)",
+      "text": "Applies to: Local service discovery, where used by OneWifi/EasyMesh. Confirm actual usage before citing as a hard requirement",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 2131 (DHCPv4)",
+      "text": "Applies to: Dhcp Manager, DHCP V4 HAL, Dnsmasq.",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 8415 (DHCPv6)",
+      "text": "Applies to: DHCP V6 HAL, Dibbler.",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 1661/1662 (PPP) + RFC 2516 (PPPoE)",
+      "text": "Applies to: RDKPPPManager. Relevant for DSL/fiber ISPs using PPP-based WAN authentication",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 3376 (IGMPv3)",
+      "text": "Applies to: IGMP Proxy.",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "UPnP Forum IGD Spec (now under Open Connectivity Foundation)",
+      "text": "Applies to: Upnp box.",
+      "category": "Architecture Standards — Network services",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 7597/7599 (MAP-T/MAP-E)",
+      "text": "Applies to: MAP-T/E features. May required kernel patches",
+      "category": "Architecture Standards — IPv6 transition mechanisms",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 6333 (DS-Lite)",
+      "text": "Applies to: Dslite features.",
+      "category": "Architecture Standards — IPv6 transition mechanisms",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "ITU-T G.984 / G.988 (GPON, OMCI)",
+      "text": "Applies to: RdkGPONManager, GPON Headend (OLT).",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "ITU-T G.9807.1 (XGS-PON)",
+      "text": "Applies to: Forward-looking GPON evolution.",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IEEE 802.3ah / 802.3av (EPON / 10G-EPON)",
+      "text": "Applies to: CcspEponAgent, EPON Headend. EPON is IEEE, not ITU-T — distinct from GPON's standards body",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "ITU-T G.993.2 (VDSL2) / G.9701 (G.fast)",
+      "text": "Applies to: RdkXdslManager, XDSL HAL, DSL Headend (DSLAM).",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "CableLabs DOCSIS 3.1/4.0 + eRouter Specification",
+      "text": "Applies to: CcspCMAgent, Docsis Headend (CMTS). eRouter spec is also the origin of the erouter0 interface naming used in your WAN bridge work",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "CableLabs PacketCable",
+      "text": "Applies to: CcspMTAAgent, MTA HAL. Voice over cable",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "3GPP TS 27.007 (AT command set)",
+      "text": "Applies to: RDKCellularManager-MM, Cellular Modem HAL, ModemManager/libqmi. Independent of RAN generation (3G/4G/5G)",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "USB-IF MBIM Specification",
+      "text": "Applies to: libmbim. Mobile Broadband Interface Model",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "MoCA Alliance MoCA 2.0/2.5",
+      "text": "Applies to: CcspMoca, MoCA HAL.",
+      "category": "Architecture Standards — Access network / WAN technologies",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Linux Kernel (GPLv2, kernel.org/Linux Foundation governance)",
+      "text": "Applies to: Linux Kernel & Device Drivers layer. UAPI stability commitment governs what RDK-B can rely on across kernel versions",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "U-Boot (GPLv2, Denx community)",
+      "text": "Applies to: Bootloader layer.",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Arm SystemReady (IR/SR profiles) + EBBR (Embedded Base Boot Requirements)",
+      "text": "Applies to: Bootloader layer, boot chain standardization. Standardizes the boot contract (U-Boot+EBBR for embedded profiles) for interoperability across Arm SoCs; complements PSA Certified, which covers security rather than boot interface",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "NIST SP 800-193 (Platform Firmware Resiliency Guidelines)",
+      "text": "Applies to: Bootloader → kernel verification chain. Detection/protection/recovery model for firmware integrity",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "Arm PSA Certified / TrustZone",
+      "text": "Applies to: Secure boot chain on ARM-based reference platforms (e.g. MT7988/BPI R4). Security/attestation, distinct from SystemReady's boot-interface scope",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "GlobalPlatform TEE Client/Internal API Specifications",
+      "text": "Applies to: Where a TEE holds boot/signing keys. Only applies if the SoC's secure boot path uses a TEE rather than ROM-only verification",
+      "category": "Architecture Standards — Boot chain, kernel & firmware integrity",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "NIST FIPS 186-5 (Digital Signature Standard — covers ECDSA)",
+      "text": "Applies to: Bootloader/kernel/firmware image signature verification.",
+      "category": "Architecture Standards — Cryptographic signing for secure boot",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "SEC 1 / SEC 2 (Certicom Standards for Efficient Cryptography)",
+      "text": "Applies to: Curve parameter selection (e.g. NIST P-256/secp256r1). Defines the actual EC curves referenced by FIPS 186-5",
+      "category": "Architecture Standards — Cryptographic signing for secure boot",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 8032 (EdDSA/Ed25519)",
+      "text": "Applies to: Alternative signing scheme. Increasingly used over ECDSA for boot-time verification due to faster, simpler constant-time implementation",
+      "category": "Architecture Standards — Cryptographic signing for secure boot",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "OCI Image Spec & Runtime Spec",
+      "text": "Applies to: crun, DAC, Dobby/BundleGen. Ties to your libbundlegen/Dobby OCI work",
+      "category": "Architecture Standards — Containers & application platform",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "MISRA-C:2012 / CERT C Secure Coding Standard",
+      "text": "Applies to: C/C++ coding anti-pattern enforcement (7.1.2). External normative anchor for the internal coding rule",
+      "category": "Architecture Standards — Security & coding standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "IETF RFC 8446 (TLS 1.3) / RFC 5280 (X.509 PKI)",
+      "text": "Applies to: WebPA/USP/ACS transport security, secure boot certs.",
+      "category": "Architecture Standards — Security & coding standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "NIST SP 800-57 (key management)",
+      "text": "Applies to: PSM-backed credential storage.",
+      "category": "Architecture Standards — Security & coding standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "OWASP IoT Top 10",
+      "text": "Applies to: General embedded device security review checklist.",
+      "category": "Architecture Standards — Security & coding standards",
+      "url": "architecture-standards.html"
+    },
+    {
+      "title": "WebUI",
+      "text": "Local Web UI · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "WebUI BWG",
+      "text": "Local Web UI · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "USP PA",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Web PA\n\nincluding:\n- parodus\n- parodus2ccsp\n- start-parodus\n- wdmp-c",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "tr069-protocol-agent",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "WebConfig",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "snmp-protocol-agent",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "dcm agent",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "xConf client",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "RFC",
+      "text": "Remote Device Management · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Ethernet Agent (used for LAN)",
+      "text": "LAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "OneWiFi",
+      "text": "LAN Interface Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Mesh Agent\n(Integrates with OpenSync v2.4)",
+      "text": "LAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "unified-wifi-mesh\n(EasyMesh)",
+      "text": "LAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "ieee1905-rs",
+      "text": "LAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "lan-manager-lite",
+      "text": "LAN Management Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Ethernet Agent (used for WAN)",
+      "text": "WAN Interface Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "PPP Manager",
+      "text": "WAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "hotspot",
+      "text": "WAN Interface Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "dhcp-manager (recipe for DHCP client only)",
+      "text": "DHCP · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "dhcp-manager (recipe for DHCP client and Server)",
+      "text": "DHCP · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "P&M",
+      "text": "Routing, parental control and WAN Management Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "WAN Manager",
+      "text": "Routing, parental control and WAN Management Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "core-net-library",
+      "text": "Routing, parental control and WAN Management Components · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "secure-upnp",
+      "text": "Routing, parental control and WAN Management Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "ccsp-xdns",
+      "text": "Routing, parental control and WAN Management Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "advanced-security",
+      "text": "Routing, parental control and WAN Management Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Utopia",
+      "text": "System Start, Platform Management and misc utilities · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "component-registry",
+      "text": "System Start, Platform Management and misc utilities · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "miscellaneous-broadband",
+      "text": "System Start, Platform Management and misc utilities · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "led-manager",
+      "text": "System Start, Platform Management and misc utilities · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "platform-manager",
+      "text": "System Start, Platform Management and misc utilities · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdkb-halif-fwupgrade",
+      "text": "System Start, Platform Management and misc utilities · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "json-hal-lib",
+      "text": "System Start, Platform Management and misc utilities · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "sysint-broadband",
+      "text": "System Start, Platform Management and misc utilities · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "common utilities",
+      "text": "System Start, Platform Management and misc utilities · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "telco-voice-manager",
+      "text": "Voice Related Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "hal-voice-asterisk",
+      "text": "Voice Related Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdk_logger",
+      "text": "Data Collection, Test and Diagnostic Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "syslog_helper",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "crashupload",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "remote_debugger",
+      "text": "Data Collection, Test and Diagnostic Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "T2 Telemetry",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Test & Diagnostics",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "ipoe-health-check",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "cpuprocanalyzer",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Break pad",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "sys_mon_tools",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "harvester",
+      "text": "Data Collection, Test and Diagnostic Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "RBUS",
+      "text": "InterProcess Communications Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "inter-device-manager",
+      "text": "InterProcess Communications Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "common-library",
+      "text": "InterProcess Communications Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "DMCLI",
+      "text": "InterProcess Communications Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "notify-component",
+      "text": "InterProcess Communications Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "PSM",
+      "text": "Non-Vol Storage · required tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "DSM",
+      "text": "App Framework Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Dobby",
+      "text": "App Framework Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "Barton Core, Barton Common",
+      "text": "Matter / IoT Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "home-security",
+      "text": "Matter / IoT Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdk-cert-config",
+      "text": "Code Security Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdkssa",
+      "text": "Code Security Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdk-libunpriv",
+      "text": "Code Security Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "libsyscallwrapper",
+      "text": "Code Security Components · common-core tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    },
+    {
+      "title": "rdkb-apparmor-profiles",
+      "text": "Code Security Components · optional tier for the EthWAN WiFi Router profile.",
+      "category": "Components",
+      "url": "components/"
+    }
+  ]
+}

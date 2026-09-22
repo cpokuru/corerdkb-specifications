@@ -1,0 +1,359 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-09-21T15:14:37Z",
+  "title": "RDK-B Modem /ONU Components",
+  "subtitle": "Components for the Modem /ONU device profile: Common Core, Required, and Optional.",
+  "tiers": [
+    {
+      "id": "common-core",
+      "label": "Common Core",
+      "color": "gold"
+    },
+    {
+      "id": "required",
+      "label": "Required",
+      "color": "blue"
+    },
+    {
+      "id": "optional",
+      "label": "Optional",
+      "color": "gray"
+    }
+  ],
+  "components": [
+    {
+      "name": "USP PA",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/usp-pa-vendor-rdk",
+      "supportingUrls": []
+    },
+    {
+      "name": "Web PA\n\nincluding:\n- parodus\n- parodus2ccsp\n- start-parodus\n- wdmp-c",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/start-parodus",
+      "supportingUrls": [
+        "https://github.com/xmidt-org"
+      ]
+    },
+    {
+      "name": "tr069-protocol-agent",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/tr069-protocol-agent",
+      "supportingUrls": []
+    },
+    {
+      "name": "WebConfig",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/webconfig",
+      "supportingUrls": [
+        "https://github.com/rdkcentral/WebconfigFramework"
+      ]
+    },
+    {
+      "name": "snmp-protocol-agent",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/snmp-protocol-agent",
+      "supportingUrls": []
+    },
+    {
+      "name": "dcm agent",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/dcm-agent",
+      "supportingUrls": []
+    },
+    {
+      "name": "xConf client",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/xconf-client",
+      "supportingUrls": []
+    },
+    {
+      "name": "RFC",
+      "category": "Remote Device Management",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rfc",
+      "supportingUrls": []
+    },
+    {
+      "name": "Ethernet Agent (used for WAN)",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/ethernet-agent",
+      "supportingUrls": []
+    },
+    {
+      "name": "cable-modem-agent",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/cable-modem-agent",
+      "supportingUrls": [
+        "https://github.com/rdkcentral/rdkb-halif-test-cm",
+        "https://github.com/rdkcentral/rdkb-halif-cm"
+      ]
+    },
+    {
+      "name": "xDSL Manager",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/xdsl-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "EPON Agent",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://code.rdkcentral.com/r/plugins/gitiles/rdkb/components/opensource/ccsp/CcspEPONAgent",
+      "supportingUrls": []
+    },
+    {
+      "name": "gpon-manager",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/gpon-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "cellular-manager",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/cellular-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "Cellular Modem Mgr",
+      "category": "WAN Interface Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/cellular-modem-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "P&M",
+      "category": "Routing, parental control and WAN Management Components",
+      "tier": "required",
+      "url": "https://github.com/rdkcentral/provisioning-and-management",
+      "supportingUrls": []
+    },
+    {
+      "name": "Utopia",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "required",
+      "url": "https://github.com/rdkcentral/utopia",
+      "supportingUrls": []
+    },
+    {
+      "name": "miscellaneous-broadband",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "required",
+      "url": "https://github.com/rdkcentral/miscellaneous-broadband",
+      "supportingUrls": []
+    },
+    {
+      "name": "led-manager",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/led-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "platform-manager",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/platform-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdkb-halif-fwupgrade",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdkb-halif-fwupgrade",
+      "supportingUrls": []
+    },
+    {
+      "name": "json-hal-lib",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/json-hal-library",
+      "supportingUrls": []
+    },
+    {
+      "name": "sysint-broadband",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/sysint-broadband",
+      "supportingUrls": []
+    },
+    {
+      "name": "common utilities",
+      "category": "System Start, Platform Management and misc utilities",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/common_utilities/",
+      "supportingUrls": []
+    },
+    {
+      "name": "MTA Agent",
+      "category": "Voice Related Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/media-terminal-adapter-agent",
+      "supportingUrls": [
+        "https://github.com/rdkcentral/rdkb-halif-test-mta"
+      ]
+    },
+    {
+      "name": "rdkb-halif-mta",
+      "category": "Voice Related Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdkb-halif-mta",
+      "supportingUrls": []
+    },
+    {
+      "name": "power manager",
+      "category": "Voice Related Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/power-manager",
+      "supportingUrls": [
+        "https://github.com/rdkcentral/rdk-halif-power_manager",
+        "https://github.com/rdkcentral/rdk-halif-test-power_manager"
+      ]
+    },
+    {
+      "name": "rdk-halif-power_manager",
+      "category": "Voice Related Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdk-halif-power_manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdk_logger",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/rdk_logger",
+      "supportingUrls": []
+    },
+    {
+      "name": "syslog_helper",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "optional",
+      "url": "https://code.rdkcentral.com/r/plugins/gitiles/rdk/components/generic/syslog_helper/+/refs/heads/rdk-next",
+      "supportingUrls": []
+    },
+    {
+      "name": "crashupload",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/crashupload",
+      "supportingUrls": []
+    },
+    {
+      "name": "remote_debugger",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "common-core",
+      "url": null,
+      "supportingUrls": []
+    },
+    {
+      "name": "T2 Telemetry",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/telemetry",
+      "supportingUrls": []
+    },
+    {
+      "name": "harvester",
+      "category": "Data Collection, Test and Diagnostic Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/harvester",
+      "supportingUrls": []
+    },
+    {
+      "name": "RBUS",
+      "category": "InterProcess Communications Components",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/rbus",
+      "supportingUrls": []
+    },
+    {
+      "name": "inter-device-manager",
+      "category": "InterProcess Communications Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/inter-device-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "common-library",
+      "category": "InterProcess Communications Components",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/common-library",
+      "supportingUrls": []
+    },
+    {
+      "name": "DMCLI",
+      "category": "InterProcess Communications Components",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/data-model-cli",
+      "supportingUrls": []
+    },
+    {
+      "name": "PSM",
+      "category": "Non-Vol Storage",
+      "tier": "required",
+      "url": "https://github.com/rdkcentral/persistent-storage-manager",
+      "supportingUrls": []
+    },
+    {
+      "name": "DSM",
+      "category": "App Framework Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/DSM",
+      "supportingUrls": []
+    },
+    {
+      "name": "Dobby",
+      "category": "App Framework Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/Dobby",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdk-cert-config",
+      "category": "Code Security Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdk-cert-config",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdkssa",
+      "category": "Code Security Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdkssa",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdk-libunpriv",
+      "category": "Code Security Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdk-libunpriv",
+      "supportingUrls": []
+    },
+    {
+      "name": "libsyscallwrapper",
+      "category": "Code Security Components",
+      "tier": "common-core",
+      "url": "https://github.com/rdkcentral/libSyscallWrapper",
+      "supportingUrls": []
+    },
+    {
+      "name": "rdkb-apparmor-profiles",
+      "category": "Code Security Components",
+      "tier": "optional",
+      "url": "https://github.com/rdkcentral/rdkb-apparmor-profiles",
+      "supportingUrls": []
+    }
+  ]
+}

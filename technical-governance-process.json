@@ -1,0 +1,2522 @@
+{
+  "source": "RDK-B_CoreRDK_Spec_MVP(InternalReference)_v1.1.pdf §7.2",
+  "docs": [
+    {
+      "number": "7.2.1",
+      "title": "Purpose",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The purpose of RDKB Broadband governance is to ensure that every new component, enhancement, bug fix, interface change, and platform integration follows a common technical standard before it is accepted into the RDK-B codebase. The governance process must ensure:"
+        },
+        {
+          "type": "li",
+          "text": "RDKB architecture consistency"
+        },
+        {
+          "type": "li",
+          "text": "Platform portability"
+        },
+        {
+          "type": "li",
+          "text": "Generic implementation suitable for community adoption"
+        },
+        {
+          "type": "li",
+          "text": "Clear ownership and review responsibility"
+        },
+        {
+          "type": "li",
+          "text": "Mandatory validation before merge"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence availability for every change"
+        },
+        {
+          "type": "li",
+          "text": "Controlled release inclusion and traceability No code change should be merged into a RDKB branch unless architecture, interface, dependency, test, and release expectations are satisfied."
+        }
+      ]
+    },
+    {
+      "number": "7.2.2",
+      "title": "Governance Scope",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "This process applies to:"
+        },
+        {
+          "type": "li",
+          "text": "New component development"
+        },
+        {
+          "type": "li",
+          "text": "Existing component enhancement"
+        },
+        {
+          "type": "li",
+          "text": "Bug fixes"
+        },
+        {
+          "type": "li",
+          "text": "HAL, Linux OSS, or platform-layer interaction"
+        },
+        {
+          "type": "li",
+          "text": "Interface changes"
+        },
+        {
+          "type": "li",
+          "text": "Dependency changes"
+        },
+        {
+          "type": "li",
+          "text": "Build system changes"
+        },
+        {
+          "type": "li",
+          "text": "Reference platform contributions"
+        },
+        {
+          "type": "li",
+          "text": "Community contributions"
+        },
+        {
+          "type": "li",
+          "text": "Release-bound changes"
+        }
+      ]
+    },
+    {
+      "number": "7.2.3",
+      "title": "Classification of Changes",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every change must be classified before development starts."
+        }
+      ]
+    },
+    {
+      "number": "7.2.3.1",
+      "title": "New Component",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A new component is any new software contribution that creates a new RDKB open source repo or collection of repos that provides new features, services or other software to be included in RDKB open source. New components SHOULD be organized so that operators can include this software only when they need a particular set of new features or services. New components MUST be organized as a collection of logically similar features or services that may be included or excluded from a finished software build as a group New components MUST NOT be an unrelated collection of features or services. Examples:"
+        },
+        {
+          "type": "li",
+          "text": "New RDK-B open source software that provides a logical group of features or services that may be compiled and used as part of a monolithic software image"
+        },
+        {
+          "type": "li",
+          "text": "New RDKB open source software that provides a logical group of features or services that may be compiled and used as a downloaded app."
+        },
+        {
+          "type": "li",
+          "text": "New RDKB open source software that provides a logical group of features or services that may contain multiple build recipes so that can optionally be compiled and built as part of a monolithic image or built as a downloaded app"
+        }
+      ]
+    },
+    {
+      "number": "7.2.3.2",
+      "title": "Enhancement",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "An enhancement modifies or extends the features or services provided by an existing component without changing the basic ownership of the component. Examples:"
+        },
+        {
+          "type": "li",
+          "text": "New features or services inside existing component repositories"
+        },
+        {
+          "type": "li",
+          "text": "New data model parameter(s) provided by the component used for configuration, telemetry, eventing or method invocation."
+        },
+        {
+          "type": "li",
+          "text": "Support for a modified HAL API"
+        }
+      ]
+    },
+    {
+      "number": "7.2.3.3",
+      "title": "Bug Fix",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A bug fix corrects an existing defect without introducing new feature behavior. Examples:"
+        },
+        {
+          "type": "li",
+          "text": "Crash fix"
+        },
+        {
+          "type": "li",
+          "text": "Memory leak fix"
+        },
+        {
+          "type": "li",
+          "text": "Functional defect fix"
+        },
+        {
+          "type": "li",
+          "text": "Race condition fix"
+        },
+        {
+          "type": "li",
+          "text": "Regression fix"
+        },
+        {
+          "type": "li",
+          "text": "Build failure fix"
+        },
+        {
+          "type": "li",
+          "text": "Test failure fix"
+        },
+        {
+          "type": "li",
+          "text": "Platform compatibility fix Bug fixes must be generic and community-aligned. Local hacks, platform-specific shortcuts, or hidden behavior under flags should not be accepted unless formally justified."
+        }
+      ]
+    },
+    {
+      "number": "7.2.4",
+      "title": "Governance Entry Criteria",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Before development starts, the contributor must create a design/review ticket with the following information."
+        }
+      ]
+    },
+    {
+      "number": "7.2.4.1",
+      "title": "Mandatory Inputs for New Component",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A new component proposal must include:"
+        },
+        {
+          "type": "li",
+          "text": "Component name"
+        },
+        {
+          "type": "li",
+          "text": "Problem statement"
+        },
+        {
+          "type": "li",
+          "text": "Functional scope including a list of the features/services provided"
+        },
+        {
+          "type": "li",
+          "text": "Non-functional scope"
+        },
+        {
+          "type": "li",
+          "text": "Ownership"
+        },
+        {
+          "type": "li",
+          "text": "Details on usage in all RDKB profiles. The proposal should indicate if this new component is required, optional or not applicable for each RDKB profile."
+        },
+        {
+          "type": "li",
+          "text": "A list of all planned data model names to be provided by this component. This must include as much detail as possible regarding the feature and purpose of each data model and detailed syntax and usage information."
+        },
+        {
+          "type": "li",
+          "text": "A list of all planned data model names to be consumed by this component (data model names that are provided by other components). Include how this component’s behavior is impacted if any of the components that provide these data models are not included in the software build."
+        },
+        {
+          "type": "li",
+          "text": "A refactoring statement that lists any software or features that are currently or were previously in other components (if any)."
+        },
+        {
+          "type": "li",
+          "text": "Runtime process model"
+        },
+        {
+          "type": "li",
+          "text": "Build-time dependency list of other RDKB components"
+        },
+        {
+          "type": "li",
+          "text": "Build-time dependency list of other open source software Runtime dependency list"
+        },
+        {
+          "type": "li",
+          "text": "List of schedule dependencies with other proposed changes (if any) Example if this new component is created due to refactoring of an existing component, this should reference the changes required in the other component(s) that have to be done at the same time. Telemetry impact"
+        },
+        {
+          "type": "li",
+          "text": "Logging impact"
+        },
+        {
+          "type": "li",
+          "text": "Security impact"
+        },
+        {
+          "type": "li",
+          "text": "Memory and CPU expectations"
+        },
+        {
+          "type": "li",
+          "text": "Boot-time impact"
+        },
+        {
+          "type": "li",
+          "text": "Restart/recovery behavior"
+        },
+        {
+          "type": "li",
+          "text": "HAL APIs used (including open source implementations like NL80211)"
+        },
+        {
+          "type": "li",
+          "text": "Platform portability plan"
+        },
+        {
+          "type": "li",
+          "text": "Test plan"
+        },
+        {
+          "type": "li",
+          "text": "Release target"
+        },
+        {
+          "type": "li",
+          "text": "Rollback plan"
+        }
+      ]
+    },
+    {
+      "number": "7.2.4.2",
+      "title": "Mandatory Inputs for Enhancement",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "An enhancement proposal must include:"
+        },
+        {
+          "type": "li",
+          "text": "Existing component impacted"
+        },
+        {
+          "type": "li",
+          "text": "Feature description"
+        },
+        {
+          "type": "li",
+          "text": "Interface impact"
+        },
+        {
+          "type": "li",
+          "text": "Changes to data models provided by this component"
+        },
+        {
+          "type": "li",
+          "text": "Changes to data models consumed by this component and how the behavior of this component is impacted if any of the components that provide these data models are not included in the software build."
+        },
+        {
+          "type": "li",
+          "text": "Dependency impact with other RDKB components"
+        },
+        {
+          "type": "li",
+          "text": "Dependency impact with non-RDK open-source dependencies"
+        },
+        {
+          "type": "li",
+          "text": "A list of HAL APIs that are updated or any new HAL APIs used by this component"
+        },
+        {
+          "type": "li",
+          "text": "Backward compatibility assessment"
+        },
+        {
+          "type": "li",
+          "text": "Platform impact"
+        },
+        {
+          "type": "li",
+          "text": "Test plan"
+        },
+        {
+          "type": "li",
+          "text": "Release target"
+        },
+        {
+          "type": "li",
+          "text": "Regression risk"
+        }
+      ]
+    },
+    {
+      "number": "7.2.4.3",
+      "title": "Mandatory Inputs for Bug Fix",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A bug fix proposal must include:"
+        },
+        {
+          "type": "li",
+          "text": "Defect description"
+        },
+        {
+          "type": "li",
+          "text": "Reproduction steps"
+        },
+        {
+          "type": "li",
+          "text": "Logs or evidence"
+        },
+        {
+          "type": "li",
+          "text": "Root cause analysis"
+        },
+        {
+          "type": "li",
+          "text": "Fix approach"
+        },
+        {
+          "type": "li",
+          "text": "Regression impact"
+        },
+        {
+          "type": "li",
+          "text": "Platforms impacted"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence"
+        },
+        {
+          "type": "li",
+          "text": "Whether the fix is generic or platform-specific"
+        },
+        {
+          "type": "li",
+          "text": "Whether the issue exists in stable branch, rdk-next, or both"
+        }
+      ]
+    },
+    {
+      "number": "7.2.5",
+      "title": "Architecture Review Rules",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "All new component contributions and major enhancements require architecture review before implementation or merge. Architecture review must validate:"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component is required, optional or not applicable to each RDKB profile"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component or change duplicates existing functionality"
+        },
+        {
+          "type": "li",
+          "text": "Whether the new component name is a good summary or label for its functionality. Don’t use names without meaning that make it hard to understand."
+        },
+        {
+          "type": "li",
+          "text": "Whether the component or change is documented sufficiently for review"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component or changes is hardware independent and properly abstracted from any hardware or vendor dependencies."
+        },
+        {
+          "type": "li",
+          "text": "Whether the component or change meets the IPC guidelines"
+        },
+        {
+          "type": "li",
+          "text": "Whether the group of new features or services make sense to be in the proposed new or existing component from an operator perspective. (Is this a logical grouping of features or services that may be included/excluded from a software build)"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component follows RDKB design principles"
+        },
+        {
+          "type": "li",
+          "text": "Whether the build time dependency model is acceptable"
+        },
+        {
+          "type": "li",
+          "text": "Whether the run-time dependency model is acceptable"
+        },
+        {
+          "type": "li",
+          "text": "Whether platform-specific logic is isolated correctly"
+        },
+        {
+          "type": "li",
+          "text": "Whether HAL/Linux OSS access is done through approved layers"
+        },
+        {
+          "type": "li",
+          "text": "Whether interfaces are stable and backward compatible"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component can run across reference platforms"
+        },
+        {
+          "type": "li",
+          "text": "Whether the component is testable in CI and on hardware"
+        },
+        {
+          "type": "li",
+          "text": "Whether this software is covered by an acceptable software license approval is mandatory for:"
+        },
+        {
+          "type": "li",
+          "text": "New RDBK component"
+        },
+        {
+          "type": "li",
+          "text": "Breaking interface change"
+        },
+        {
+          "type": "li",
+          "text": "New mandatory dependency"
+        },
+        {
+          "type": "li",
+          "text": "New HAL contract"
+        },
+        {
+          "type": "li",
+          "text": "Data model provider change"
+        },
+        {
+          "type": "li",
+          "text": "Release-blocking feature"
+        },
+        {
+          "type": "li",
+          "text": "Change impacting multiple components"
+        },
+        {
+          "type": "li",
+          "text": "Change impacting community platform portability"
+        }
+      ]
+    },
+    {
+      "number": "7.2.6",
+      "title": "Platform Layer Invocation Rules",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Components must not directly embed board-specific logic inside RDKB implementations.to be aligned with HAL spec"
+        }
+      ]
+    },
+    {
+      "number": "7.2.6.1",
+      "title": "Preferred Access Order",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "An RDKB component should access platform functionality in the following order:"
+        },
+        {
+          "type": "li",
+          "text": "Standard Linux OSS interface"
+        },
+        {
+          "type": "li",
+          "text": "Existing RDK-B abstraction or service"
+        },
+        {
+          "type": "li",
+          "text": "Approved HAL interface"
+        },
+        {
+          "type": "li",
+          "text": "Vendor/platform plugin"
+        },
+        {
+          "type": "li",
+          "text": "Platform-specific fallback only when formally approved"
+        }
+      ]
+    },
+    {
+      "number": "7.2.6.2",
+      "title": "Linux OSS Access",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Use Linux OSS interfaces when the functionality is standard and portable. Examples:"
+        },
+        {
+          "type": "li",
+          "text": "netlink"
+        },
+        {
+          "type": "li",
+          "text": "sysfs"
+        },
+        {
+          "type": "li",
+          "text": "procfs"
+        },
+        {
+          "type": "li",
+          "text": "iproute2-compatible behavior"
+        },
+        {
+          "type": "li",
+          "text": "standard kernel networking APIs"
+        },
+        {
+          "type": "li",
+          "text": "standard systemd interaction where applicable Linux OSS usage must be validated across supported kernel versions and reference platforms."
+        }
+      ]
+    },
+    {
+      "number": "7.2.6.3",
+      "title": "HAL Access",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Use HAL when:"
+        },
+        {
+          "type": "li",
+          "text": "A common vendor independent interface to vendor specific drivers or low-level software is required."
+        },
+        {
+          "type": "li",
+          "text": "Hardware-specific behavior is required"
+        },
+        {
+          "type": "li",
+          "text": "Vendor implementation may differ"
+        },
+        {
+          "type": "li",
+          "text": "Acceleration path is SoC-specific"
+        },
+        {
+          "type": "li",
+          "text": "Radio, switch, PHY, WAN, LAN, or hardware diagnostics behavior is not portable through standard Linux APIs HAL usage must follow these rules:"
+        },
+        {
+          "type": "li",
+          "text": "HAL API must be generic"
+        },
+        {
+          "type": "li",
+          "text": "HAL must not expose vendor-private implementation details"
+        },
+        {
+          "type": "li",
+          "text": "HAL header must be reviewed before implementation"
+        },
+        {
+          "type": "li",
+          "text": "HAL behavior must be documented"
+        },
+        {
+          "type": "li",
+          "text": "HAL failure handling must be defined"
+        },
+        {
+          "type": "li",
+          "text": "Stub/reference implementation must be available where possible"
+        },
+        {
+          "type": "li",
+          "text": "Component must degrade gracefully if capability is not supported"
+        }
+      ]
+    },
+    {
+      "number": "7.2.6.4",
+      "title": "Direct Vendor Calls",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Direct vendor SDK/API calls make RDKB open source software vendor dependent and violate the spirit and intent of RDKB. Direct vendor SDK/API calls inside RDKB component code are not allowed unless formally approved."
+        }
+      ]
+    },
+    {
+      "number": "7.2.7",
+      "title": "Dependency Governance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every component must declare and justify:"
+        },
+        {
+          "type": "li",
+          "text": "Build-time dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Runtime dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Optional dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Platform-specific dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Service startup dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Library dependencies"
+        },
+        {
+          "type": "li",
+          "text": "Package dependencies New dependencies must be reviewed for:"
+        },
+        {
+          "type": "li",
+          "text": "Portability"
+        },
+        {
+          "type": "li",
+          "text": "License compatibility"
+        },
+        {
+          "type": "li",
+          "text": "Security risk"
+        },
+        {
+          "type": "li",
+          "text": "Maintenance ownership"
+        },
+        {
+          "type": "li",
+          "text": "Image size impact"
+        },
+        {
+          "type": "li",
+          "text": "Boot-time impact"
+        },
+        {
+          "type": "li",
+          "text": "Runtime memory impact"
+        },
+        {
+          "type": "li",
+          "text": "Impact on minimal profile builds No new mandatory dependency should be added to RDKB components unless it is required for generic broadband functionality."
+        }
+      ]
+    },
+    {
+      "number": "7.2.8",
+      "title": "Development Flow",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.2.8.1",
+      "title": "New Component Flow",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The required flow is:"
+        },
+        {
+          "type": "li",
+          "text": "Create architecture proposal ticket"
+        },
+        {
+          "type": "li",
+          "text": "Complete architecture review"
+        },
+        {
+          "type": "li",
+          "text": "Identify component owner and reviewers"
+        },
+        {
+          "type": "li",
+          "text": "Define interface and dependency contract"
+        },
+        {
+          "type": "li",
+          "text": "Define HAL/Linux OSS interaction model"
+        },
+        {
+          "type": "li",
+          "text": "Define all data model provided"
+        },
+        {
+          "type": "li",
+          "text": "List all data models consumed"
+        },
+        {
+          "type": "li",
+          "text": "Define test plan"
+        },
+        {
+          "type": "li",
+          "text": "Develop implementation"
+        },
+        {
+          "type": "li",
+          "text": "Run local build and unit tests"
+        },
+        {
+          "type": "li",
+          "text": "Run platform validation"
+        },
+        {
+          "type": "li",
+          "text": "Submit PR"
+        },
+        {
+          "type": "li",
+          "text": "Run CI checks"
+        },
+        {
+          "type": "li",
+          "text": "Complete peer review"
+        },
+        {
+          "type": "li",
+          "text": "Complete RTAB review if required"
+        },
+        {
+          "type": "li",
+          "text": "Attach test evidence"
+        },
+        {
+          "type": "li",
+          "text": "Merge only after sanity pass (including a comparison with run-time data model auto-discovery)"
+        },
+        {
+          "type": "li",
+          "text": "Track release inclusion"
+        }
+      ]
+    },
+    {
+      "number": "7.2.8.2",
+      "title": "Enhancement Flow",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The required flow is:"
+        },
+        {
+          "type": "li",
+          "text": "Create enhancement ticket"
+        },
+        {
+          "type": "li",
+          "text": "Document design and impact"
+        },
+        {
+          "type": "li",
+          "text": "Review interface and dependency changes"
+        },
+        {
+          "type": "li",
+          "text": "Confirm backward compatibility"
+        },
+        {
+          "type": "li",
+          "text": "Develop change"
+        },
+        {
+          "type": "li",
+          "text": "Run unit, functional, and regression tests"
+        },
+        {
+          "type": "li",
+          "text": "Submit PR"
+        },
+        {
+          "type": "li",
+          "text": "Attach test evidence"
+        },
+        {
+          "type": "li",
+          "text": "Complete peer/component owner review"
+        },
+        {
+          "type": "li",
+          "text": "Complete RTAB approval if component behavior changes"
+        },
+        {
+          "type": "li",
+          "text": "Merge after sanity pass (including a comparison with run-time data model auto-discovery)"
+        },
+        {
+          "type": "li",
+          "text": "Include in release notes if user-visible or interface-impacting"
+        }
+      ]
+    },
+    {
+      "number": "7.2.8.3",
+      "title": "Bug Fix Flow",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The required flow is:"
+        },
+        {
+          "type": "li",
+          "text": "Create defect ticket"
+        },
+        {
+          "type": "li",
+          "text": "Attach reproduction evidence"
+        },
+        {
+          "type": "li",
+          "text": "Complete root cause analysis"
+        },
+        {
+          "type": "li",
+          "text": "Add details of how this was fixed to the defect ticket"
+        },
+        {
+          "type": "li",
+          "text": "Confirm affected platforms and branches"
+        },
+        {
+          "type": "li",
+          "text": "Implement generic fix"
+        },
+        {
+          "type": "li",
+          "text": "Validate original failure scenario"
+        },
+        {
+          "type": "li",
+          "text": "Run regression tests"
+        },
+        {
+          "type": "li",
+          "text": "Submit PR"
+        },
+        {
+          "type": "li",
+          "text": "Attach before/after evidence"
+        },
+        {
+          "type": "li",
+          "text": "Merge only after sanity pass (including a comparison with run-time data model auto-discovery)"
+        },
+        {
+          "type": "li",
+          "text": "Decide whether fix is needed in stable branch, rdk-next, or both"
+        }
+      ]
+    },
+    {
+      "number": "7.2.9",
+      "title": "Testing Governance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Testing is mandatory for every new component, enhancement, and bug fix. No code change should be merged if required sanity testing fails."
+        }
+      ]
+    },
+    {
+      "number": "7.2.9.1",
+      "title": "Test Types Required",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Each change must be evaluated against the following test categories. Build Validation"
+        },
+        {
+          "type": "li",
+          "text": "Clean build"
+        },
+        {
+          "type": "li",
+          "text": "Incremental build"
+        },
+        {
+          "type": "li",
+          "text": "Component build"
+        },
+        {
+          "type": "li",
+          "text": "Image build"
+        },
+        {
+          "type": "li",
+          "text": "Package dependency validation"
+        },
+        {
+          "type": "li",
+          "text": "Yocto recipe validation"
+        },
+        {
+          "type": "li",
+          "text": "Static build dependency check Unit Testing"
+        },
+        {
+          "type": "li",
+          "text": "Function-level test"
+        },
+        {
+          "type": "li",
+          "text": "Error path test"
+        },
+        {
+          "type": "li",
+          "text": "Boundary condition test"
+        },
+        {
+          "type": "li",
+          "text": "Data Model run-time auto-discovery"
+        },
+        {
+          "type": "li",
+          "text": "Sysevent scan to verify no new sysevent usage"
+        },
+        {
+          "type": "li",
+          "text": "Invalid input test"
+        },
+        {
+          "type": "li",
+          "text": "API contract test"
+        },
+        {
+          "type": "li",
+          "text": "Mock HAL test if HAL is involved Functional Testing"
+        },
+        {
+          "type": "li",
+          "text": "Feature enable/disable"
+        },
+        {
+          "type": "li",
+          "text": "Basic workflow"
+        },
+        {
+          "type": "li",
+          "text": "Runtime behavior"
+        },
+        {
+          "type": "li",
+          "text": "Service start/stop/restart"
+        },
+        {
+          "type": "li",
+          "text": "Configuration persistence"
+        },
+        {
+          "type": "li",
+          "text": "Data model get/set validation"
+        },
+        {
+          "type": "li",
+          "text": "RBUSvalidation where applicable"
+        },
+        {
+          "type": "li",
+          "text": "CLI/API validation where applicable Integration Testing"
+        },
+        {
+          "type": "li",
+          "text": "Interaction with dependent services"
+        },
+        {
+          "type": "li",
+          "text": "Boot order validation"
+        },
+        {
+          "type": "li",
+          "text": "Systemd dependency validation"
+        },
+        {
+          "type": "li",
+          "text": "Sysevent/RBUS/event validation"
+        },
+        {
+          "type": "li",
+          "text": "Telemetry/logging validation"
+        },
+        {
+          "type": "li",
+          "text": "HAL/Linux OSS integration validation"
+        },
+        {
+          "type": "li",
+          "text": "Upgrade/reboot persistence Regression Testing"
+        },
+        {
+          "type": "li",
+          "text": "Existing feature sanity"
+        },
+        {
+          "type": "li",
+          "text": "Component regression"
+        },
+        {
+          "type": "li",
+          "text": "Impacted component regression"
+        },
+        {
+          "type": "li",
+          "text": "Data model regression"
+        },
+        {
+          "type": "li",
+          "text": "Boot sanity"
+        },
+        {
+          "type": "li",
+          "text": "Connectivity sanity"
+        },
+        {
+          "type": "li",
+          "text": "Memory/process sanity Negative Testing"
+        },
+        {
+          "type": "li",
+          "text": "Dependency missing"
+        },
+        {
+          "type": "li",
+          "text": "HAL failure"
+        },
+        {
+          "type": "li",
+          "text": "Invalid configuration"
+        },
+        {
+          "type": "li",
+          "text": "Permission failure"
+        },
+        {
+          "type": "li",
+          "text": "Interface unavailable"
+        },
+        {
+          "type": "li",
+          "text": "Process crash/restart"
+        },
+        {
+          "type": "li",
+          "text": "Unsupported platform capability Performance Testing"
+        },
+        {
+          "type": "li",
+          "text": "CPU usage"
+        },
+        {
+          "type": "li",
+          "text": "Memory usage"
+        },
+        {
+          "type": "li",
+          "text": "Boot-time impact"
+        },
+        {
+          "type": "li",
+          "text": "Runtime latency"
+        },
+        {
+          "type": "li",
+          "text": "Event storm behavior"
+        },
+        {
+          "type": "li",
+          "text": "Log volume"
+        },
+        {
+          "type": "li",
+          "text": "Telemetry volume Security Testing"
+        },
+        {
+          "type": "li",
+          "text": "Input validation"
+        },
+        {
+          "type": "li",
+          "text": "Command injection risk"
+        },
+        {
+          "type": "li",
+          "text": "File permission validation"
+        },
+        {
+          "type": "li",
+          "text": "Secret handling"
+        },
+        {
+          "type": "li",
+          "text": "Privilege usage"
+        },
+        {
+          "type": "li",
+          "text": "Network exposure"
+        },
+        {
+          "type": "li",
+          "text": "API authentication/authorization where applicable Stability Testing"
+        },
+        {
+          "type": "li",
+          "text": "Reboot validation"
+        },
+        {
+          "type": "li",
+          "text": "Process restart validation"
+        },
+        {
+          "type": "li",
+          "text": "Long-run validation"
+        },
+        {
+          "type": "li",
+          "text": "Memory leak check"
+        },
+        {
+          "type": "li",
+          "text": "Crash check"
+        },
+        {
+          "type": "li",
+          "text": "Log flooding check"
+        }
+      ]
+    },
+    {
+      "number": "7.2.10",
+      "title": "Testing Expectations by Change Type",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.2.10.1",
+      "title": "New Component",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Minimum required evidence:"
+        },
+        {
+          "type": "li",
+          "text": "Successful image build"
+        },
+        {
+          "type": "li",
+          "text": "Successful component start/stop/restart"
+        },
+        {
+          "type": "li",
+          "text": "Functional test results"
+        },
+        {
+          "type": "li",
+          "text": "Unit test results"
+        },
+        {
+          "type": "li",
+          "text": "Integration test results"
+        },
+        {
+          "type": "li",
+          "text": "Reboot test results"
+        },
+        {
+          "type": "li",
+          "text": "Memory and CPU observation"
+        },
+        {
+          "type": "li",
+          "text": "Negative test results"
+        },
+        {
+          "type": "li",
+          "text": "Logs showing normal behavior"
+        },
+        {
+          "type": "li",
+          "text": ""
+        },
+        {
+          "type": "li",
+          "text": "Data Model run-time auto-discovery to document usage"
+        },
+        {
+          "type": "li",
+          "text": "Sysevent scan to verify no new sysevent usage"
+        },
+        {
+          "type": "li",
+          "text": "Platform validation report"
+        },
+        {
+          "type": "li",
+          "text": "CI result link"
+        },
+        {
+          "type": "li",
+          "text": "Known limitations"
+        }
+      ]
+    },
+    {
+      "number": "7.2.10.2",
+      "title": "Enhancement",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Minimum required evidence:"
+        },
+        {
+          "type": "li",
+          "text": "Build pass"
+        },
+        {
+          "type": "li",
+          "text": "Existing functionality regression pass"
+        },
+        {
+          "type": "li",
+          "text": "New functionality test pass"
+        },
+        {
+          "type": "li",
+          "text": "Interface backward compatibility result"
+        },
+        {
+          "type": "li",
+          "text": "Impacted component sanity result"
+        },
+        {
+          "type": "li",
+          "text": "Logs before and after change"
+        },
+        {
+          "type": "li",
+          "text": "Data Model run-time auto-discovery to document usage"
+        },
+        {
+          "type": "li",
+          "text": "Sysevent scan to verify no new sysevent usage"
+        },
+        {
+          "type": "li",
+          "text": "Platform validation result"
+        },
+        {
+          "type": "li",
+          "text": "CI result link"
+        }
+      ]
+    },
+    {
+      "number": "7.2.10.3",
+      "title": "Bug Fix",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Minimum required evidence:"
+        },
+        {
+          "type": "li",
+          "text": "Original issue reproduction evidence"
+        },
+        {
+          "type": "li",
+          "text": "Root cause analysis"
+        },
+        {
+          "type": "li",
+          "text": "Fix validation evidence"
+        },
+        {
+          "type": "li",
+          "text": "Before/after logs"
+        },
+        {
+          "type": "li",
+          "text": "Regression test result"
+        },
+        {
+          "type": "li",
+          "text": "Data Model run-time auto-discovery to document usage"
+        },
+        {
+          "type": "li",
+          "text": "Sysevent scan to verify no new sysevent usage"
+        },
+        {
+          "type": "li",
+          "text": "Impacted platform validation"
+        },
+        {
+          "type": "li",
+          "text": "Confirmation that fix is generic"
+        },
+        {
+          "type": "li",
+          "text": "CI result link"
+        }
+      ]
+    },
+    {
+      "number": "7.2.11",
+      "title": "Platform Test Matrix",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Each change must define which platforms were tested and why."
+        }
+      ]
+    },
+    {
+      "number": "7.2.11.1",
+      "title": "Minimum Platform Validation",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "At minimum, RDK-B component changes should be validated on:"
+        },
+        {
+          "type": "li",
+          "text": "Primary reference platform"
+        },
+        {
+          "type": "li",
+          "text": "One active hardware reference platform"
+        },
+        {
+          "type": "li",
+          "text": "Emulated or CI platform where available Example platform categories:"
+        },
+        {
+          "type": "li",
+          "text": "qemux86broadband or equivalent CI reference"
+        },
+        {
+          "type": "li",
+          "text": "Raspberry Pi or generic reference platform"
+        },
+        {
+          "type": "li",
+          "text": "Banana Pi R4 / Filogic / active broadband reference hardware"
+        },
+        {
+          "type": "li",
+          "text": "Vendor platform if the change is hardware-specific"
+        }
+      ]
+    },
+    {
+      "number": "7.2.11.2",
+      "title": "Platform Selection Rules",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Test on hardware platform when the change impacts:"
+        },
+        {
+          "type": "li",
+          "text": "WAN"
+        },
+        {
+          "type": "li",
+          "text": "LAN"
+        },
+        {
+          "type": "li",
+          "text": "Wi-Fi"
+        },
+        {
+          "type": "li",
+          "text": "Switch"
+        },
+        {
+          "type": "li",
+          "text": "PHY"
+        },
+        {
+          "type": "li",
+          "text": "HAL"
+        },
+        {
+          "type": "li",
+          "text": "Kernel interface"
+        },
+        {
+          "type": "li",
+          "text": "Boot sequence"
+        },
+        {
+          "type": "li",
+          "text": "Telemetry"
+        },
+        {
+          "type": "li",
+          "text": "TR-181 runtime behavior"
+        },
+        {
+          "type": "li",
+          "text": "USP/TR-369 runtime behavior"
+        },
+        {
+          "type": "li",
+          "text": "WebPA runtime behavior"
+        },
+        {
+          "type": "li",
+          "text": "TR-069 runtime behavior"
+        },
+        {
+          "type": "li",
+          "text": "System service behavior Test on CI/emulated platform when the change impacts:"
+        },
+        {
+          "type": "li",
+          "text": "Generic component logic"
+        },
+        {
+          "type": "li",
+          "text": "Build system"
+        },
+        {
+          "type": "li",
+          "text": "Data model provider"
+        },
+        {
+          "type": "li",
+          "text": "Library behavior"
+        },
+        {
+          "type": "li",
+          "text": "Static dependency"
+        },
+        {
+          "type": "li",
+          "text": "Configuration parsing"
+        },
+        {
+          "type": "li",
+          "text": "Non-hardware-specific functionality"
+        }
+      ]
+    },
+    {
+      "number": "7.2.11.3",
+      "title": "Hardware-Specific Changes",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "For hardware-specific changes:"
+        },
+        {
+          "type": "li",
+          "text": "Validate on the target hardware"
+        },
+        {
+          "type": "li",
+          "text": "Validate that generic platforms are not broken"
+        },
+        {
+          "type": "li",
+          "text": "Isolate platform logic outside the RDKB components when possible"
+        },
+        {
+          "type": "li",
+          "text": "Provide fallback behavior for unsupported capability"
+        }
+      ]
+    },
+    {
+      "number": "7.2.12",
+      "title": "Branch and Build Governance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every change must state which branch/build was validated."
+        }
+      ]
+    },
+    {
+      "number": "7.2.12.1",
+      "title": "rdk-next/develop",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Use rdk-next/develop for:"
+        },
+        {
+          "type": "li",
+          "text": "New component development"
+        },
+        {
+          "type": "li",
+          "text": "New feature development"
+        },
+        {
+          "type": "li",
+          "text": "Major enhancement"
+        },
+        {
+          "type": "li",
+          "text": "Interface change"
+        },
+        {
+          "type": "li",
+          "text": "New dependency"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract update"
+        },
+        {
+          "type": "li",
+          "text": "Experimental RDKB Component work"
+        },
+        {
+          "type": "li",
+          "text": "Community-first development"
+        }
+      ]
+    },
+    {
+      "number": "7.2.12.2",
+      "title": "Stable Working Branches (one branch for each supported LTS release)",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Use stable branches for:"
+        },
+        {
+          "type": "li",
+          "text": "Critical bug fixes"
+        },
+        {
+          "type": "li",
+          "text": "Release-bound fixes"
+        },
+        {
+          "type": "li",
+          "text": "Regression fixes"
+        },
+        {
+          "type": "li",
+          "text": "Security fixes"
+        },
+        {
+          "type": "li",
+          "text": "Operator-required fixes"
+        },
+        {
+          "type": "li",
+          "text": "Backport candidates Replace the change on other supported LTS branches where applicable"
+        }
+      ]
+    },
+    {
+      "number": "7.2.12.3",
+      "title": "Testing Rule",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "For new RDKB development:"
+        },
+        {
+          "type": "li",
+          "text": "Validate first on rdk-next"
+        },
+        {
+          "type": "li",
+          "text": "Validate release need on target stable branches if required"
+        },
+        {
+          "type": "li",
+          "text": "Backport only after fix/feature is stable and approved For bug fixes:"
+        },
+        {
+          "type": "li",
+          "text": "Validate on the branch where issue was found"
+        },
+        {
+          "type": "li",
+          "text": "Validate on rdk-next if the code exists there"
+        },
+        {
+          "type": "li",
+          "text": "Validate backport branches if release requires it"
+        }
+      ]
+    },
+    {
+      "number": "7.2.13",
+      "title": "Review and Approval Model",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.2.13.1",
+      "title": "Where to Raise Reviews",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "All reviews must be tracked using:"
+        },
+        {
+          "type": "li",
+          "text": "GitHub issue for feature/defect tracking"
+        },
+        {
+          "type": "li",
+          "text": "GitHub PR for code review"
+        },
+        {
+          "type": "li",
+          "text": "Project board for release tracking"
+        },
+        {
+          "type": "li",
+          "text": "Architecture review record for new RDKB component or major change"
+        },
+        {
+          "type": "li",
+          "text": "Review record for applicable changes or breaking changes"
+        }
+      ]
+    },
+    {
+      "number": "7.2.13.2",
+      "title": "Required Reviewers",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Reviewers should include:"
+        },
+        {
+          "type": "li",
+          "text": "Component owner"
+        },
+        {
+          "type": "li",
+          "text": "Peer reviewer"
+        },
+        {
+          "type": "li",
+          "text": "Platform/reference platform owner"
+        },
+        {
+          "type": "li",
+          "text": "Architecture owner for new component or major enhancement"
+        },
+        {
+          "type": "li",
+          "text": "HAL owner if HAL is impacted"
+        },
+        {
+          "type": "li",
+          "text": "Test owner or QA representative"
+        },
+        {
+          "type": "li",
+          "text": "Release engineer for release-bound changes"
+        },
+        {
+          "type": "li",
+          "text": "RTAB for major RDKB component or breaking interface changes"
+        }
+      ]
+    },
+    {
+      "number": "7.2.13.3",
+      "title": "Review Checklist",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Reviewers must confirm:"
+        },
+        {
+          "type": "li",
+          "text": "Design is generic"
+        },
+        {
+          "type": "li",
+          "text": "Code follows RDKB standards"
+        },
+        {
+          "type": "li",
+          "text": "Dependency model is acceptable"
+        },
+        {
+          "type": "li",
+          "text": "No unnecessary platform-specific logic exists"
+        },
+        {
+          "type": "li",
+          "text": "HAL/Linux OSS usage is correct"
+        },
+        {
+          "type": "li",
+          "text": "Backward compatibility is preserved"
+        },
+        {
+          "type": "li",
+          "text": "Error handling is complete"
+        },
+        {
+          "type": "li",
+          "text": "Logs are useful but not excessive"
+        },
+        {
+          "type": "li",
+          "text": "Data Models used for telemetry are meaningful"
+        },
+        {
+          "type": "li",
+          "text": "Security risks are addressed"
+        },
+        {
+          "type": "li",
+          "text": "Tests are sufficient"
+        },
+        {
+          "type": "li",
+          "text": "CI passed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence is attached"
+        },
+        {
+          "type": "li",
+          "text": "Release impact is documented"
+        }
+      ]
+    },
+    {
+      "number": "7.2.14",
+      "title": "Merge Criteria",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A change can be merged only when all applicable conditions are met."
+        }
+      ]
+    },
+    {
+      "number": "7.2.14.1",
+      "title": "Mandatory Merge Criteria",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "PR is linked to issue/ticket"
+        },
+        {
+          "type": "li",
+          "text": "Architecture review completed if required"
+        },
+        {
+          "type": "li",
+          "text": "RTAB approval completed if required"
+        },
+        {
+          "type": "li",
+          "text": "CI checks passed"
+        },
+        {
+          "type": "li",
+          "text": "Build validation passed"
+        },
+        {
+          "type": "li",
+          "text": "Required sanity tests passed including data model run-time auto-discovery"
+        },
+        {
+          "type": "li",
+          "text": "Required platform tests passed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence attached"
+        },
+        {
+          "type": "li",
+          "text": "No unresolved critical review comments"
+        },
+        {
+          "type": "li",
+          "text": "No unexplained functional test failures"
+        },
+        {
+          "type": "li",
+          "text": "Release impact documented"
+        },
+        {
+          "type": "li",
+          "text": "Rollback plan documented for high-risk changes"
+        }
+      ]
+    },
+    {
+      "number": "7.2.14.2",
+      "title": "Blocking Conditions",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Code must not be merged if:"
+        },
+        {
+          "type": "li",
+          "text": "Sanity test failed"
+        },
+        {
+          "type": "li",
+          "text": "CI failed without approved exception"
+        },
+        {
+          "type": "li",
+          "text": "Functional test failure has no root cause"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence is missing"
+        },
+        {
+          "type": "li",
+          "text": "Dependency impact is not reviewed"
+        },
+        {
+          "type": "li",
+          "text": "HAL/interface change is not approved"
+        },
+        {
+          "type": "li",
+          "text": "Change is hidden under a flag without justification"
+        },
+        {
+          "type": "li",
+          "text": "Fix is platform-specific but placed in RDKB Component generic code"
+        },
+        {
+          "type": "li",
+          "text": "Release engineer cannot confirm primary expectation is met"
+        }
+      ]
+    },
+    {
+      "number": "7.2.15",
+      "title": "Test Evidence Requirements",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "All test results must be attached to the ticket or PR. Evidence must include:"
+        },
+        {
+          "type": "li",
+          "text": "Test summary"
+        },
+        {
+          "type": "li",
+          "text": "Test case list"
+        },
+        {
+          "type": "li",
+          "text": "Pass/fail status for each test case"
+        },
+        {
+          "type": "li",
+          "text": "Logs for important test cases"
+        },
+        {
+          "type": "li",
+          "text": "Failure logs where applicable"
+        },
+        {
+          "type": "li",
+          "text": "Component level data model auto-discovery list"
+        },
+        {
+          "type": "li",
+          "text": "Platform details"
+        },
+        {
+          "type": "li",
+          "text": "Build details"
+        },
+        {
+          "type": "li",
+          "text": "Branch details"
+        },
+        {
+          "type": "li",
+          "text": "Image version"
+        },
+        {
+          "type": "li",
+          "text": "Commit ID"
+        },
+        {
+          "type": "li",
+          "text": "Date of validation"
+        },
+        {
+          "type": "li",
+          "text": "Tester name or automation job link"
+        },
+        {
+          "type": "li",
+          "text": "Known issues"
+        },
+        {
+          "type": "li",
+          "text": "Deviations or exceptions For every failed functional test:"
+        },
+        {
+          "type": "li",
+          "text": "A development ticket must be created"
+        },
+        {
+          "type": "li",
+          "text": "Root cause analysis must be provided"
+        },
+        {
+          "type": "li",
+          "text": "Fix must be generic enough for community alignment"
+        },
+        {
+          "type": "li",
+          "text": "Release impact must be assessed No release-bound change should be accepted with unexplained failures."
+        }
+      ]
+    },
+    {
+      "number": "7.2.16",
+      "title": "Release Governance",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.2.16.1",
+      "title": "Release Inclusion Criteria",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A change can be included in release only when:"
+        },
+        {
+          "type": "li",
+          "text": "Feature/bug ticket is closed or release-approved"
+        },
+        {
+          "type": "li",
+          "text": "PR is merged into correct branch"
+        },
+        {
+          "type": "li",
+          "text": "CI passed"
+        },
+        {
+          "type": "li",
+          "text": "Required platform validation passed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence is available"
+        },
+        {
+          "type": "li",
+          "text": "Release engineer confirms primary expectation is met"
+        },
+        {
+          "type": "li",
+          "text": "Known issues are documented"
+        },
+        {
+          "type": "li",
+          "text": "Release notes are updated if needed"
+        }
+      ]
+    },
+    {
+      "number": "7.2.16.2",
+      "title": "Release Notes",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Release notes must include:"
+        },
+        {
+          "type": "li",
+          "text": "New component details"
+        },
+        {
+          "type": "li",
+          "text": "Enhancement summary"
+        },
+        {
+          "type": "li",
+          "text": "Bug fix summary"
+        },
+        {
+          "type": "li",
+          "text": "Interface changes"
+        },
+        {
+          "type": "li",
+          "text": "Data model changes from run-time auto-discovery"
+        },
+        {
+          "type": "li",
+          "text": "HAL changes"
+        },
+        {
+          "type": "li",
+          "text": "Dependency changes"
+        },
+        {
+          "type": "li",
+          "text": "Migration steps if any"
+        },
+        {
+          "type": "li",
+          "text": "Known limitations"
+        },
+        {
+          "type": "li",
+          "text": "Test platforms"
+        },
+        {
+          "type": "li",
+          "text": "Validation summary"
+        }
+      ]
+    },
+    {
+      "number": "7.2.16.3",
+      "title": "Release Timing",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Changes should be released based on classification: New Component Release in planned major/minor release after full validation. Enhancement Release in planned feature release unless it is required for a committed operator/customer milestone. Bug Fix Release in next maintenance release or patch release depending on severity. Critical/Security Fix Release through expedited patch process after mandatory validation and approval."
+        }
+      ]
+    },
+    {
+      "number": "7.2.17",
+      "title": "Flag Governance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "No code change should be accepted under a flag unless truly required. Flags are allowed only when at least one of the following is true:"
+        },
+        {
+          "type": "li",
+          "text": "Feature is optional by design"
+        },
+        {
+          "type": "li",
+          "text": "Feature is not required for all operators or markets"
+        },
+        {
+          "type": "li",
+          "text": "Feature consumes large amounts of memory and may not be suitable for all devices"
+        },
+        {
+          "type": "li",
+          "text": "Feature consumes large amounts of CPU and may not be suitable for all devices"
+        },
+        {
+          "type": "li",
+          "text": "Feature is not applicable for some RDKB profiles when other features in the same component are applicable"
+        },
+        {
+          "type": "li",
+          "text": "Platform capability is not universally available"
+        },
+        {
+          "type": "li",
+          "text": "Migration requires staged rollout"
+        },
+        {
+          "type": "li",
+          "text": "Release risk needs controlled enablement"
+        },
+        {
+          "type": "li",
+          "text": "Backward compatibility requires coexistence Flags are not allowed for:"
+        },
+        {
+          "type": "li",
+          "text": "Hiding incomplete code"
+        },
+        {
+          "type": "li",
+          "text": "Avoiding proper architecture review"
+        },
+        {
+          "type": "li",
+          "text": "Avoiding test failures"
+        },
+        {
+          "type": "li",
+          "text": "Carrying platform-specific hacks"
+        },
+        {
+          "type": "li",
+          "text": "Bypassing community alignment Every flag must have:"
+        },
+        {
+          "type": "li",
+          "text": "Clear owner"
+        },
+        {
+          "type": "li",
+          "text": "Default behavior"
+        },
+        {
+          "type": "li",
+          "text": "Documentation"
+        },
+        {
+          "type": "li",
+          "text": "Test coverage for enabled and disabled modes"
+        },
+        {
+          "type": "li",
+          "text": "Removal plan if temporary"
+        }
+      ]
+    },
+    {
+      "number": "7.2.18",
+      "title": "Reference Platform and Community Contribution Rules",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "All community contributions and Reference Platform team changes must be validated before merge. Required expectations:"
+        },
+        {
+          "type": "li",
+          "text": "Changes must have required documentation"
+        },
+        {
+          "type": "li",
+          "text": "Code must build on reference platform"
+        },
+        {
+          "type": "li",
+          "text": "RDKB Component sanity must pass"
+        },
+        {
+          "type": "li",
+          "text": "Functional validation must be attached"
+        },
+        {
+          "type": "li",
+          "text": "No reference-only assumption should enter RDKB Components"
+        },
+        {
+          "type": "li",
+          "text": "Platform-specific changes must remain in platform layer"
+        },
+        {
+          "type": "li",
+          "text": "Generic code must remain portable"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence must be available in ticket/PR"
+        }
+      ]
+    },
+    {
+      "number": "7.2.19",
+      "title": "Governance Checklist",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.2.19.1",
+      "title": "New Component Checklist",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "New component ticket created"
+        },
+        {
+          "type": "li",
+          "text": "Architecture proposal created"
+        },
+        {
+          "type": "li",
+          "text": "Component ownership defined"
+        },
+        {
+          "type": "li",
+          "text": "RDKB Component classification confirmed"
+        },
+        {
+          "type": "li",
+          "text": "Dependency list reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Interface contract reviewed"
+        },
+        {
+          "type": "li",
+          "text": "HAL/Linux OSS usage reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Data model impact documented"
+        },
+        {
+          "type": "li",
+          "text": "Security impact reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Telemetry/logging plan reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Test plan approved"
+        },
+        {
+          "type": "li",
+          "text": "CI passed"
+        },
+        {
+          "type": "li",
+          "text": "Reference platform tested"
+        },
+        {
+          "type": "li",
+          "text": "Hardware platform tested if applicable"
+        },
+        {
+          "type": "li",
+          "text": "Reboot/restart tested"
+        },
+        {
+          "type": "li",
+          "text": "Negative testing completed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence attached"
+        },
+        {
+          "type": "li",
+          "text": "RTAB approval completed if required"
+        },
+        {
+          "type": "li",
+          "text": "Release plan documented"
+        }
+      ]
+    },
+    {
+      "number": "7.2.19.2",
+      "title": "Enhancement Checklist",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Enhancement ticket created"
+        },
+        {
+          "type": "li",
+          "text": "Impacted component identified"
+        },
+        {
+          "type": "li",
+          "text": "Backward compatibility checked"
+        },
+        {
+          "type": "li",
+          "text": "Interface/data model impact documented"
+        },
+        {
+          "type": "li",
+          "text": "Dependency impact reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Unit/functional tests passed"
+        },
+        {
+          "type": "li",
+          "text": "Regression tests passed"
+        },
+        {
+          "type": "li",
+          "text": "Platform validation completed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence attached"
+        },
+        {
+          "type": "li",
+          "text": "Release notes updated if required"
+        }
+      ]
+    },
+    {
+      "number": "7.2.19.3",
+      "title": "Bug Fix Checklist",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Defect ticket created"
+        },
+        {
+          "type": "li",
+          "text": "Reproduction steps attached"
+        },
+        {
+          "type": "li",
+          "text": "Root cause analysis completed"
+        },
+        {
+          "type": "li",
+          "text": "Fix approach reviewed"
+        },
+        {
+          "type": "li",
+          "text": "Before/after evidence attached"
+        },
+        {
+          "type": "li",
+          "text": "Regression testing completed"
+        },
+        {
+          "type": "li",
+          "text": "Branch impact checked"
+        },
+        {
+          "type": "li",
+          "text": "Backport need assessed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence attached"
+        },
+        {
+          "type": "li",
+          "text": "Release inclusion decision made"
+        }
+      ]
+    },
+    {
+      "number": "7.2.20",
+      "title": "Final Governance Rule",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "RDK Broadband changes must be generic, portable, testable, and community aligned. No code change should be merged or released unless:"
+        },
+        {
+          "type": "li",
+          "text": "The primary expectation is met"
+        },
+        {
+          "type": "li",
+          "text": "Sanity testing is passed"
+        },
+        {
+          "type": "li",
+          "text": "Test evidence is attached"
+        },
+        {
+          "type": "li",
+          "text": "Failures are understood and tracked"
+        },
+        {
+          "type": "li",
+          "text": "Review ownership is clear"
+        },
+        {
+          "type": "li",
+          "text": "Release impact is documented"
+        },
+        {
+          "type": "li",
+          "text": "The implementation aligns with RDK-B architecture principles"
+        }
+      ]
+    }
+  ]
+}

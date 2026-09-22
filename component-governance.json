@@ -1,0 +1,706 @@
+{
+  "source": "RDK-B_CoreRDK_Spec_MVP(InternalReference)_v1.1.pdf §7.3",
+  "docs": [
+    {
+      "number": "7.3.1",
+      "title": "Purpose",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The purpose of Component Governance is to ensure that every RDK-B component has a defined owner, a known lifecycle state, a health baseline, and a clear exit path. While Section 7.2 governs how changes are introduced and validated, Section 7.3 governs what happens to a component across its entire life — from registration through active maintenance to deprecation and removal. Component governance must ensure:"
+        },
+        {
+          "type": "li",
+          "text": "Every RDK-B component has a registered owner at all times"
+        },
+        {
+          "type": "li",
+          "text": "Component lifecycle state is known and current"
+        },
+        {
+          "type": "li",
+          "text": "Orphaned or unhealthy components are identified and resolved"
+        },
+        {
+          "type": "li",
+          "text": "Deprecated components have a defined migration path"
+        },
+        {
+          "type": "li",
+          "text": "HAL contracts and TR-181 parameters are transferred cleanly when components change state"
+        },
+        {
+          "type": "li",
+          "text": "Community contributors and operators have visibility into component health and roadmap"
+        }
+      ]
+    },
+    {
+      "number": "7.3.2",
+      "title": "Component Registry",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every component accepted into RDK-B must be registered in the Component Registry at merge time. The registry is the authoritative record of all active, deprecated, and removed components."
+        }
+      ]
+    },
+    {
+      "number": "7.3.2.1",
+      "title": "Mandatory Registry Fields",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Each component entry must include:"
+        },
+        {
+          "type": "li",
+          "text": "Component name"
+        },
+        {
+          "type": "li",
+          "text": "Primary GitHub repository"
+        },
+        {
+          "type": "li",
+          "text": "Supporting repositories (if any)"
+        },
+        {
+          "type": "li",
+          "text": "Classification for each RDKB profile (CORE / Required / Optional / Not Applicable)"
+        },
+        {
+          "type": "li",
+          "text": "Current lifecycle state (Active / Stable / Deprecated / Removed)"
+        },
+        {
+          "type": "li",
+          "text": "Primary owner (name and organization)"
+        },
+        {
+          "type": "li",
+          "text": "Secondary owner (name and organization)"
+        },
+        {
+          "type": "li",
+          "text": "Primary interfaces (RBUS / HAL)"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract reference (if applicable)"
+        },
+        {
+          "type": "li",
+          "text": "Provided TR-181 data model provided by the component with list of names, syntax and usage details for each name"
+        },
+        {
+          "type": "li",
+          "text": "List of dependent RDKB components"
+        },
+        {
+          "type": "li",
+          "text": "List of dependent non-RDKB open source components"
+        },
+        {
+          "type": "li",
+          "text": "Last validated release"
+        },
+        {
+          "type": "li",
+          "text": "Known open critical issues"
+        },
+        {
+          "type": "li",
+          "text": "Distro flag(s) controlling inclusion"
+        }
+      ]
+    },
+    {
+      "number": "7.3.2.2",
+      "title": "Registry Maintenance Rules",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Registry must be updated at every release"
+        },
+        {
+          "type": "li",
+          "text": "Any change to owner, state, or interfaces must trigger a registry update"
+        },
+        {
+          "type": "li",
+          "text": "RTAB is responsible for registry accuracy"
+        },
+        {
+          "type": "li",
+          "text": "Registry must be publicly accessible to the RDK community"
+        }
+      ]
+    },
+    {
+      "number": "7.3.3",
+      "title": "Component Lifecycle States",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every RDK-B component must be in exactly one lifecycle state at all times."
+        },
+        {
+          "type": "table",
+          "headers": [
+            "State",
+            "Meaning"
+          ],
+          "rows": [
+            [
+              "Active",
+              "Component is under active development and maintenance. New features, enhancements, and bug fixes are accepted. Full governance process applies."
+            ],
+            [
+              "Stable",
+              "Component interface is frozen. Only critical bug fixes and security fixes are accepted. No new features. HAL contract is locked."
+            ],
+            [
+              "Deprecated",
+              "Component is scheduled for removal. No new features or enhancements accepted. Critical security fixes only. Migration path is defined and published."
+            ],
+            [
+              "Removed",
+              "Component is no longer part of RDK-B. Repository archived. No changes accepted."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "number": "7.3.3.1",
+      "title": "State Transition Rules",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Active → Stable: Requires architecture owner approval. Interface freeze declared. HAL contract version locked."
+        },
+        {
+          "type": "li",
+          "text": "Stable → Deprecated: Requires RTAB approval. Migration path must be defined before transition."
+        },
+        {
+          "type": "li",
+          "text": "Deprecated → Removed: Requires RTAB approval. Migration path must be confirmed complete. Operator notification period must have elapsed."
+        },
+        {
+          "type": "li",
+          "text": "Any State → Active: Requires RTAB approval if previously Stable or Deprecated."
+        }
+      ]
+    },
+    {
+      "number": "7.3.4",
+      "title": "Component Ownership Model",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every RDK-B component must have a defined primary owner and a secondary owner at all times."
+        }
+      ]
+    },
+    {
+      "number": "7.3.4.1",
+      "title": "Owner Responsibilities",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The primary owner is responsible for:"
+        },
+        {
+          "type": "li",
+          "text": "Architecture decisions for the component"
+        },
+        {
+          "type": "li",
+          "text": "Review and approval of all PRs touching the component"
+        },
+        {
+          "type": "li",
+          "text": "Maintaining the component's test suite"
+        },
+        {
+          "type": "li",
+          "text": "Representing the component in RTAB and architecture reviews"
+        },
+        {
+          "type": "li",
+          "text": "Keeping the registry entry current"
+        },
+        {
+          "type": "li",
+          "text": "Participating in periodic health reviews"
+        },
+        {
+          "type": "li",
+          "text": "Defining the migration plan if deprecation is required"
+        }
+      ]
+    },
+    {
+      "number": "7.3.4.2",
+      "title": "Ownership Transfer Process",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "When a primary owner is no longer available:"
+        },
+        {
+          "type": "li",
+          "text": "Secondary owner automatically assumes primary responsibility"
+        },
+        {
+          "type": "li",
+          "text": "A new primary/secondary owner must be nominated within one release cycle"
+        },
+        {
+          "type": "li",
+          "text": "If no secondary owner exists, the component is escalated to RTAB for ownership resolution"
+        },
+        {
+          "type": "li",
+          "text": "RTAB may assign ownership to another organization, open it to community volunteers, or initiate deprecation if no owner is found"
+        }
+      ]
+    },
+    {
+      "number": "7.3.4.3",
+      "title": "Orphan Resolution",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A component is considered orphaned when:"
+        },
+        {
+          "type": "li",
+          "text": "Primary and secondary owner are both unavailable"
+        },
+        {
+          "type": "li",
+          "text": "No PR reviews have occurred in two consecutive release cycles"
+        },
+        {
+          "type": "li",
+          "text": "Health review has not been completed for one year Orphaned components are escalated to RTAB. RTAB must resolve ownership or initiate deprecation within one release cycle."
+        }
+      ]
+    },
+    {
+      "number": "7.3.5",
+      "title": "Periodic Health Review",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every RDK-B component classified as CORE, Required or Optional and is included in reference builds for any RDKB profile that is being released must undergo a health review once per release cycle."
+        }
+      ]
+    },
+    {
+      "number": "7.3.5.1",
+      "title": "Health Review Criteria",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The health review must confirm:"
+        },
+        {
+          "type": "li",
+          "text": "Ownership is current and active"
+        },
+        {
+          "type": "li",
+          "text": "Component builds cleanly on the current reference platform"
+        },
+        {
+          "type": "li",
+          "text": "CI is passing"
+        },
+        {
+          "type": "li",
+          "text": "Test suite is current and passing"
+        },
+        {
+          "type": "li",
+          "text": "No unresolved critical or security defects older than one release cycle"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract is current and matches active vendor implementations"
+        },
+        {
+          "type": "li",
+          "text": "TR-181 data model scope is accurate and agrees with run-time auto-discovery"
+        },
+        {
+          "type": "li",
+          "text": "Registry entry is up to date"
+        },
+        {
+          "type": "li",
+          "text": "No known community-reported regressions are unaddressed"
+        }
+      ]
+    },
+    {
+      "number": "7.3.5.2",
+      "title": "Health Review Outcome",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "table",
+          "headers": [
+            "Outcome",
+            "Action"
+          ],
+          "rows": [
+            [
+              "Healthy",
+              "No action required. Registry updated with review date."
+            ],
+            [
+              "At Risk",
+              "Owner must submit a remediation plan within 30 days."
+            ],
+            [
+              "Unhealthy",
+              "Escalated to RTAB. RTAB decides: remediation, ownership transfer, or deprecation."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "number": "7.3.5.3",
+      "title": "Health Review Responsibility",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Component owner conducts the review"
+        },
+        {
+          "type": "li",
+          "text": "Architecture owner validates the result"
+        },
+        {
+          "type": "li",
+          "text": "RTAB reviews all At Risk and Unhealthy outcomes"
+        }
+      ]
+    },
+    {
+      "number": "7.3.6",
+      "title": "Deprecation and Migration Policy",
+      "level": 2,
+      "blocks": []
+    },
+    {
+      "number": "7.3.6.1",
+      "title": "Deprecation Declaration",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A component may be deprecated when:"
+        },
+        {
+          "type": "li",
+          "text": "Functionality is superseded by a newer component"
+        },
+        {
+          "type": "li",
+          "text": "Component cannot meet architecture standards and remediation is not feasible"
+        },
+        {
+          "type": "li",
+          "text": "No active owner can be identified"
+        },
+        {
+          "type": "li",
+          "text": "RTAB determines the component no longer aligns with RDK-B goals Deprecation requires:"
+        },
+        {
+          "type": "li",
+          "text": "RTAB approval"
+        },
+        {
+          "type": "li",
+          "text": "Migration path defined before deprecation is declared"
+        },
+        {
+          "type": "li",
+          "text": "Operator notification published in release notes"
+        },
+        {
+          "type": "li",
+          "text": "Minimum one full release cycle between Deprecated state and Removed state"
+        }
+      ]
+    },
+    {
+      "number": "7.3.6.2",
+      "title": "Migration Path Requirements",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A migration plan must define:"
+        },
+        {
+          "type": "li",
+          "text": "Replacement component or approach"
+        },
+        {
+          "type": "li",
+          "text": "Step-by-step migration guide for operators and integrators"
+        },
+        {
+          "type": "li",
+          "text": "Timeline for migration"
+        },
+        {
+          "type": "li",
+          "text": "Support period during coexistence (deprecated component + replacement)"
+        },
+        {
+          "type": "li",
+          "text": "Test coverage for the migration path"
+        }
+      ]
+    },
+    {
+      "number": "7.3.6.3",
+      "title": "HAL Contract Handoff",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "When a deprecated component owns a HAL contract:"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract must be transferred to the replacement component (if any) before removal"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract version must be incremented"
+        },
+        {
+          "type": "li",
+          "text": "Vendor re-validation must be required against the new contract owner"
+        },
+        {
+          "type": "li",
+          "text": "Transition period must be defined allowing vendors to update implementations"
+        }
+      ]
+    },
+    {
+      "number": "7.3.6.4",
+      "title": "TR-181 Parameter Transfer",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "When a deprecated component owns TR-181 parameters:"
+        },
+        {
+          "type": "li",
+          "text": "Parameters must be transferred to the replacement component (if any)"
+        },
+        {
+          "type": "li",
+          "text": "Data model backward compatibility must be maintained during the transition period"
+        },
+        {
+          "type": "li",
+          "text": "Breaking data model changes require RTAB approval and operator notification"
+        }
+      ]
+    },
+    {
+      "number": "7.3.6.5",
+      "title": "Removal Criteria",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "A component can move to Removed state only when:"
+        },
+        {
+          "type": "li",
+          "text": "RTAB approval is obtained"
+        },
+        {
+          "type": "li",
+          "text": "Migration path is confirmed complete by at least one reference platform"
+        },
+        {
+          "type": "li",
+          "text": "Operator notification period has elapsed"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract handoff is complete"
+        },
+        {
+          "type": "li",
+          "text": "TR-181 parameter transfer is complete"
+        },
+        {
+          "type": "li",
+          "text": "Repository is archived and marked as removed in registry"
+        }
+      ]
+    },
+    {
+      "number": "7.3.7",
+      "title": "Interface Stability Tagging",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Every HAL interface and RBUS API must carry an explicit stability tag."
+        }
+      ]
+    },
+    {
+      "number": "7.3.7.1",
+      "title": "Stability Levels",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "table",
+          "headers": [
+            "Tag",
+            "Meaning"
+          ],
+          "rows": [
+            [
+              "Experimental",
+              "Interface is under active design. Breaking changes may occur without notice. Not for production use."
+            ],
+            [
+              "Stable",
+              "Interface is production ready. Breaking changes require RTAB approval and versioning."
+            ],
+            [
+              "Frozen",
+              "Interface will not change. Only bug fixes to documentation or behavior clarifications permitted."
+            ],
+            [
+              "Deprecated",
+              "Interface is scheduled for removal. Migration path is defined. No new consumers should adopt it."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "number": "7.3.7.2",
+      "title": "Tagging Requirements",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "All HAL headers must carry a stability tag in the file header comment"
+        },
+        {
+          "type": "li",
+          "text": "All RBUS APIs must carry a stability tag in the API documentation"
+        },
+        {
+          "type": "li",
+          "text": "Tag changes must be reviewed by the architecture owner"
+        },
+        {
+          "type": "li",
+          "text": "Downgrade from Stable to Experimental is not permitted without RTAB approval"
+        }
+      ]
+    },
+    {
+      "number": "7.3.7.3",
+      "title": "Freeze and Unfreeze Process",
+      "level": 3,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "Interface freeze requires architecture owner declaration and registry update"
+        },
+        {
+          "type": "li",
+          "text": "Unfreeze (Frozen → Stable) requires RTAB approval and a versioning increment"
+        },
+        {
+          "type": "li",
+          "text": "Frozen interfaces that need behavioral change must be versioned as a new interface, not modified in place"
+        }
+      ]
+    },
+    {
+      "number": "7.3.8",
+      "title": "Component Governance Checklist",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "For every release cycle, the component owner must confirm:"
+        },
+        {
+          "type": "li",
+          "text": "Health review completed"
+        },
+        {
+          "type": "li",
+          "text": "Registry entry current"
+        },
+        {
+          "type": "li",
+          "text": "Ownership confirmed"
+        },
+        {
+          "type": "li",
+          "text": "CI passing"
+        },
+        {
+          "type": "li",
+          "text": "Test suite current"
+        },
+        {
+          "type": "li",
+          "text": "No unresolved critical defects"
+        },
+        {
+          "type": "li",
+          "text": "HAL contract current"
+        },
+        {
+          "type": "li",
+          "text": "TR-181 provider list and details are accurate"
+        },
+        {
+          "type": "li",
+          "text": "Interface stability tags current"
+        }
+      ]
+    }
+  ]
+}

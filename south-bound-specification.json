@@ -1,0 +1,128 @@
+{
+  "source": "Hand-authored overview (no dedicated South Bound Spec PDF exists yet in this repo, unlike the North Bound High Level API Spec) -- update this file directly, or replace it with an extractor's output once a formal document exists.",
+  "docs": [
+    {
+      "number": "1",
+      "title": "Overview",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Where the North Bound Specification defines the protocol and data-model contract RDK-B exposes upward to the operator and cloud, the South Bound Specification covers the other direction: the contract between RDK-B middleware and the silicon/BSP underneath it. This is the surface a SoC or vendor team implements against to bring a new platform up on RDK-B."
+        },
+        {
+          "type": "p",
+          "text": "In practice this surface isn't a single uniform API. Two distinct patterns exist side by side across RDK-B components, and both are in scope for this page."
+        },
+        {
+          "type": "li",
+          "text": "Formal HAL interfaces: a defined header (the rdkb-halif-* repos) that a vendor implements for their chipset — Wi-Fi, Cable Modem, GPON, xDSL, Ethernet Switch, MoCA, Cellular, Platform, Voice, and others. This is the traditional RDK Ready certification surface."
+        },
+        {
+          "type": "li",
+          "text": "OSS southbound delegation: several \"manager\" components (WAN Manager, DHCP Manager, XDNS, Utopia's DHCP server path, and others) don't implement their protocol themselves — they orchestrate an existing open-source tool (pppd, udhcpc, dnsmasq, iproute2, ipset, libnl, wireless-tools, and similar) via config files, system calls, or netlink, and report status back up through the data model. There's no vendor-implemented header here; the \"southbound\" dependency is on the OSS package itself, not a chipset contract."
+        }
+      ]
+    },
+    {
+      "number": "2",
+      "title": "Scope",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "This page, and the List of South Bound APIs it links to, cover:"
+        },
+        {
+          "type": "li",
+          "text": "Every RDK-B-defined HAL interface tracked in hal-repos.json, each backed by its own rdkb-halif-* repo and versioned header."
+        },
+        {
+          "type": "li",
+          "text": "The OSS packages and system-level utilities RDK-B components delegate to instead of a formal HAL, where that delegation has been verified against real component source or official RDK documentation (not inferred from naming)."
+        },
+        {
+          "type": "p",
+          "text": "Out of scope: the North Bound data model those components expose (see the North Bound Specification), and internal component-to-component IPC (RBUS, sysevent), which isn't a vendor-facing boundary."
+        }
+      ]
+    },
+    {
+      "number": "3",
+      "title": "Definitions",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "li",
+          "text": "HAL Interface: A versioned header file defining the function calls, structs, and enums a vendor implements to bridge an RDK-B component to their chipset or BSP. Published as its own rdkb-halif-* repo."
+        },
+        {
+          "type": "li",
+          "text": "Vendor Implementation: The vendor's own closed- or open-source code behind a HAL interface header, built and linked against the platform's SDK. Not published in the rdkb-halif-* repo itself."
+        },
+        {
+          "type": "li",
+          "text": "OSS Southbound Delegation: The pattern where an RDK-B \"manager\" component (e.g. WAN Manager, DHCP Manager) doesn't own a protocol implementation itself, but configures and monitors a general-purpose open-source package (dnsmasq, pppd, udhcpc, iproute2, and similar) that does the real work. No vendor-specific header is involved; every platform runs the same upstream package."
+        },
+        {
+          "type": "li",
+          "text": "RDK Ready Certification: A per-HAL-interface test and certification program. Because certification is modular, a Wi-Fi SoC vendor certifies only against the RDK-B Wi-Fi HAL, a DOCSIS SoC vendor only against the Cable Modem HAL — allowing operators to mix vendors across subsystems on the same platform."
+        }
+      ]
+    },
+    {
+      "number": "4",
+      "title": "South Bound Interface Categories",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "h",
+          "text": "Formal HAL interfaces (rdkb-halif-*)"
+        },
+        {
+          "type": "p",
+          "text": "Broadband access & connectivity: Cable Modem HAL, GPON HAL, EPON HAL, xDSL HAL, Ethernet Switch HAL, WiFi HAL, MoCA HAL, Cellular HAL, Cellular Modem HAL, WAN HAL, VLAN HAL, Bridge Utility HAL."
+        },
+        {
+          "type": "p",
+          "text": "Platform & lifecycle: Platform HAL, Firmware Upgrade HAL, eMMC HAL, DHCP HAL, DHCPv6 Client HAL, Direct Kernel Access."
+        },
+        {
+          "type": "p",
+          "text": "Voice & apps: MTA (Voice Gateway) HAL, Voice HAL, LPA (eSIM) HAL, MSO HAL, Bluetooth, Matter, Thread, Zigbee, Container."
+        },
+        {
+          "type": "h",
+          "text": "OSS southbound delegation (no vendor header — same upstream package on every platform)"
+        },
+        {
+          "type": "p",
+          "text": "WAN/network stack: PPPD, DHCPv6 client tooling (dibbler-client, dibbler-server, ti_udhcpc, udhcpc), Dnsmasq, Firewall-Iptables, UPNP, iproute2, ipset, zebra, libnl, libnetfilter_conntrack, net-tools, procps, bridge-utils, wireless-tools."
+        },
+        {
+          "type": "p",
+          "text": "Wi-Fi tooling adjacent to the WiFi HAL: libhostap, wlancfg, wlancfg_tr, mocacfg, mocactl, ivictl."
+        },
+        {
+          "type": "p",
+          "text": "The full, current list — including which repo and branch backs each entry — is on the List of South Bound APIs page."
+        }
+      ]
+    },
+    {
+      "number": "5",
+      "title": "Versioning & Compatibility",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Vendor interfaces evolve over time, so each rdkb-halif-* repo, the RDK-B component consuming it, and the vendor code certified against it are kept in version lockstep — a component declares which HAL major/minor version it expects, and certification is tied to that specific version, not just the interface name."
+        },
+        {
+          "type": "p",
+          "text": "OSS southbound delegation carries a different kind of compatibility concern: because the same upstream package runs unmodified across platforms, the relevant version to track is the package version pinned in the build (e.g. the dnsmasq or pppd release), not a header revision. A behavior change there affects every RDK-B platform using that component, not just one vendor's implementation."
+        }
+      ]
+    }
+  ]
+}

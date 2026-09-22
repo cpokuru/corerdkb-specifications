@@ -1,0 +1,73 @@
+{
+  "_source": "Core_RDK_Broadband_V1.1.pdf (internal deck)",
+  "_note": "Hand-curated, like FIVE_TIER in extract_spec_content.py -- this deck is a slide layout (title bars + two-column Goal/Challenge boxes), not a structured document, so it isn't a good fit for the pdfplumber table/heading extraction the spec PDF uses. Update this file by hand when the deck changes.",
+  "definition": "RDKB Core is a collection of foundational building-blocks called \"components.\" They're designed for easier reuse, improved modularity, RDK Ready vendor certification, reduced code size, and consistent interface definitions.",
+  "goals": [
+    {
+      "title": "Easier Component Reuse",
+      "goal": "Core RDKB components must be easy to reuse across every device profile — from a simple modem/ONU, to an Ethernet router or Wi-Fi gateway, to an EasyMesh controller or extender, to add-on profiles like app lifecycle management and IoT.",
+      "challenge": "Historical releases focused narrowly on the Ethernet Wi-Fi Router or Wi-Fi Gateway profile, so code carried assumptions that made reuse difficult elsewhere — operators had to modify components themselves, increasing time-to-market and cost."
+    },
+    {
+      "title": "Modularity — Build-Time Dependencies",
+      "goal": "Avoid tight coupling and unnecessary build-time dependencies. Developers shouldn't have to manually edit and strip dependencies every time a component is reused.",
+      "challenge": "Some components have problem build-time dependencies with other components. If these components are not in the software build, then a build time error will occur. For example: OneWifi, WAN Manager, DHCP Manager, P&M, Utopia, Test and Diag, TR-069 PA, Xconf, and others — carry an unnecessary build-time dependency on the cable modem HAL interface today."
+    },
+    {
+      "title": "Modularity — Run-Time Dependencies",
+      "goal": "Run-time dependencies to optional components and apps must be flexible and dynamic. A component that relies on another's methods or properties must keep providing its expected feature subset even when that component isn't present.",
+      "challenge": "Some components have problem run-time dependencies with other components. If these components are not in the software build, then a run-time error, unexpected behavior or crash may occur. For example: Utopia, RFC, CcspCr, Test and Diag, TR-069 PA, Xconf, OneWifi, CcspWiFiAgent, CcspHotspot, and others — have an inflexible run-time dependency on T2 telemetry. This can be a problem because T2 telemetry is an optional component; some operators use other telemetry approaches entirely."
+    },
+    {
+      "title": "Reduced Code Size",
+      "goal": "Code must scale from small modem/ONUs and extenders up to high-end gateways with apps and IoT. Each component should support a limited, well-defined feature set, allocate only the memory it needs, and be easy to exclude when not needed.",
+      "challenge": "Large components like Utopia and P&M are hard to reason about or extract from the build. Some code (e.g. CCSP Common Lib) over-allocates memory, and documentation on including/excluding optional components needs improvement."
+    },
+    {
+      "title": "Consistent Interface Definitions",
+      "goal": "Use a common way to persist values and a standard IPC mechanism between components, with test code that exercises that IPC the way it's actually used in production — a pre-validated core reduces integration and testing cycles.",
+      "challenge": "Multiple persistence approaches are in use today (sysConfig, PSM, Platform HAL, mySQL), and some older components still use SysEvent, DMCLI, or Common Lib for IPC instead of RBUS."
+    }
+  ],
+  "rdk_ready": [
+    {
+      "title": "Well-defined interfaces to vendor code",
+      "body": "Use industry-standard vendor interfaces (e.g. NL80211) as the RDKB HAL wherever they already exist. Where gaps remain, RDK components support an RDK-defined HAL interface — or a standard HAL interface plus RDK-defined HAL extensions. Vendor interfaces evolve over time, so tight version control is maintained between each HAL spec, the RDKB component using it, and the vendor code certified against it."
+    },
+    {
+      "title": "Test and certification program",
+      "body": "A test mechanism exists for each individual HAL interface spec, and every vendor runs the same tests. A formal certification process verifies vendor compliance with specific HAL interfaces and versions. Because certification is modular, a Wi-Fi SoC vendor certifies only against the RDKB Wi-Fi HAL and a DOCSIS SoC vendor only against the Cable Modem HAL — so operators can mix and match vendors (e.g. Wi-Fi from Vendor A, GPON from Vendor B) on the same platform."
+    }
+  ],
+  "benefits": [
+    {
+      "category": "Modularity, code reuse & scalability",
+      "items": [
+        "Easier and faster code reuse",
+        "Minimized build-time dependencies",
+        "Flexible run-time dependencies",
+        "Code size that scales across device types",
+        "Flexible logging and diagnostics"
+      ]
+    },
+    {
+      "category": "RDK Ready",
+      "items": [
+        "A certification program for vendors",
+        "Improved HAL interface definitions",
+        "Test code provided for each HAL interface"
+      ]
+    },
+    {
+      "category": "Consistent interface definitions",
+      "items": [
+        "Quicker on-ramp for new developers",
+        "Easier training",
+        "A larger talent pool",
+        "Better testability",
+        "Higher quality"
+      ]
+    }
+  ],
+  "value_proposition": "RDKB core enables easier code reuse, faster development, and consistent behavior across diverse vendors and device types."
+}
